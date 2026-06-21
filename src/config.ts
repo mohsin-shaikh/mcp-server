@@ -18,9 +18,11 @@ export interface ServerConfig {
   httpAllowedHosts: string[];
   httpMaxBytes: number;
   httpTimeoutMs: number;
+  fsRoot: string | undefined;
+  fsMaxReadBytes: number;
 }
 
-const DEFAULT_MODULES = ["meta", "http", "json", "datetime"];
+const DEFAULT_MODULES = ["meta", "http", "json", "datetime", "docs"];
 
 function envBool(key: string, fallback: boolean): boolean {
   const value = process.env[key];
@@ -89,6 +91,8 @@ export function loadConfigFromEnv(): ServerConfig {
     httpAllowedHosts: parseCommaList(process.env["HTTP_TOOL_ALLOWED_HOSTS"]),
     httpMaxBytes: envInt("HTTP_TOOL_MAX_RESPONSE_BYTES", 1_048_576),
     httpTimeoutMs: envInt("HTTP_TOOL_TIMEOUT_MS", 10_000),
+    fsRoot: process.env["FS_ROOT"],
+    fsMaxReadBytes: envInt("FS_MAX_READ_BYTES", 1_048_576),
   };
 }
 
@@ -150,5 +154,7 @@ export function configSummary(config: ServerConfig): Record<string, unknown> {
     httpAllowedHosts: config.httpAllowedHosts,
     httpMaxBytes: config.httpMaxBytes,
     httpTimeoutMs: config.httpTimeoutMs,
+    fsRootConfigured: Boolean(config.fsRoot),
+    fsMaxReadBytes: config.fsMaxReadBytes,
   };
 }

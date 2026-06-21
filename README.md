@@ -8,6 +8,8 @@ General-purpose [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 - **Pluggable modules** — add tools without touching core transport code
 - **Schema-first validation** with Zod
 - **Built-in generic tools** — HTTP fetch, JSON utilities, datetime helpers, server info
+- **Resources & prompts** — build plan, config schema, module docs, workflow templates
+- **Optional filesystem module** — sandboxed read-only file access under `FS_ROOT`
 - **Security defaults** — deny-all HTTP host allowlist, read-only mode, secret redaction
 - **Structured logging** to stderr (stdio-safe)
 
@@ -37,7 +39,7 @@ Add to `.cursor/mcp.json`:
       "command": "pnpm",
       "args": ["--dir", "/path/to/mcp-server", "dev"],
       "env": {
-        "MCP_MODULES": "meta,http,json,datetime",
+        "MCP_MODULES": "meta,http,json,datetime,docs",
         "READ_ONLY": "true",
         "HTTP_TOOL_ALLOWED_HOSTS": "api.github.com,httpbin.org"
       }
@@ -57,6 +59,25 @@ Add to `.cursor/mcp.json`:
 | `json_pick` | json | Extract paths from JSON |
 | `datetime_now` | datetime | Current time (ISO 8601) |
 | `datetime_format` | datetime | Format/parse ISO date strings |
+| `read_file` | filesystem | Read file under `FS_ROOT` (opt-in) |
+| `list_dir` | filesystem | List directory under `FS_ROOT` (opt-in) |
+| `search_files` | filesystem | Search files by pattern under `FS_ROOT` (opt-in) |
+
+## Resources
+
+| URI | Content |
+|-----|---------|
+| `mcp://docs/build-plan` | Project build plan |
+| `mcp://docs/modules/{id}` | Per-module usage docs |
+| `mcp://config/schema` | JSON Schema of server config |
+
+## Prompts
+
+| Prompt | Purpose |
+|--------|---------|
+| `explore_api` | Safely discover and call an unknown REST API |
+| `debug_tool_error` | Checklist when a tool call fails |
+| `design_new_module` | Guide for adding a new `McpModule` |
 
 ## Configuration
 
@@ -64,17 +85,25 @@ Environment variables (see `.env.example`):
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MCP_MODULES` | `meta,http,json,datetime` | Comma-separated module ids, or `*` for all |
+| `MCP_MODULES` | `meta,http,json,datetime,docs` | Comma-separated module ids, or `*` for all (except filesystem) |
 | `READ_ONLY` | `false` | Skip mutating modules (e.g. http) |
 | `HTTP_TOOL_ALLOWED_HOSTS` | _(empty)_ | Comma-separated allowed hostnames (deny-all if empty) |
 | `HTTP_TOOL_MAX_RESPONSE_BYTES` | `1048576` | Max response size |
 | `HTTP_TOOL_TIMEOUT_MS` | `10000` | Request timeout |
+| `FS_ROOT` | _(empty)_ | Sandbox root for filesystem module |
+| `FS_MAX_READ_BYTES` | `1048576` | Max bytes read per file |
 | `LOG_LEVEL` | `info` | Log level (stderr only) |
 
 CLI flags override env:
 
 ```bash
 mcp-server --transport stdio --modules meta,http --read-only
+```
+
+Enable the filesystem module:
+
+```bash
+FS_ROOT=/path/to/project MCP_MODULES=meta,docs,filesystem pnpm dev
 ```
 
 ## Adding a custom module
@@ -107,8 +136,10 @@ src/
 ├── registry/         # module registration
 ├── transport/        # stdio (http in Phase 3)
 ├── middleware/       # auth, read-only, audit logging
-├── modules/          # built-in: meta, http, json, datetime
-└── lib/              # errors, format, schema, result helpers
+├── resources/        # docs + config schema resources
+├── prompts/          # reusable prompt templates
+├── modules/          # built-in modules
+└── lib/              # errors, format, schema, result, fs, tool helpers
 ```
 
 ## License
