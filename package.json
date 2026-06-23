@@ -27,20 +27,34 @@
   "engines": {
     "node": ">=22"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zuupee/mcp-server.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "tsx src/index.ts",
+    "dev:http": "MCP_TRANSPORT=http tsx src/index.ts",
     "build": "tsup",
+    "prepublishOnly": "pnpm build && pnpm test",
     "pretest": "pnpm build",
     "start": "node bin/mcp-server.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "inspect": "npx @modelcontextprotocol/inspector -- pnpm dev",
     "lint": "eslint src/",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "docker:build": "docker build -t zuupee/mcp-server:local ."
   },
   "dependencies": {
     "@cfworker/json-schema": "^4.1.1",
+    "@hono/node-server": "^1.19.9",
+    "@modelcontextprotocol/hono": "2.0.0-alpha.2",
+    "@modelcontextprotocol/node": "2.0.0-alpha.2",
     "@modelcontextprotocol/server": "2.0.0-alpha.2",
+    "hono": "^4.12.26",
     "pino": "^9.6.0",
     "zod": "^4.0.0"
   },
@@ -48,8 +62,8 @@
     "@eslint/js": "^9.21.0",
     "@types/node": "^22.13.10",
     "eslint": "^9.21.0",
-    "tsx": "^4.19.3",
     "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.0",
     "vitest": "^3.0.8"

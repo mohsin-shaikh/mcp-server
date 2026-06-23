@@ -5,6 +5,7 @@ General-purpose [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 ## Features
 
 - **stdio transport** for local development (Cursor, Claude Desktop)
+- **Streamable HTTP transport** for remote deployment (Hono + session management)
 - **Pluggable modules** — add tools without touching core transport code
 - **Schema-first validation** with Zod
 - **Built-in generic tools** — HTTP fetch, JSON utilities, datetime helpers, server info
@@ -25,7 +26,33 @@ General-purpose [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 ```bash
 pnpm install
 cp .env.example .env.local
-pnpm dev
+pnpm dev              # stdio server
+pnpm dev:http         # HTTP server on :3100
+```
+
+### Remote HTTP mode
+
+```bash
+export MCP_TRANSPORT=http
+export MCP_HTTP_HOST=0.0.0.0
+export MCP_AUTH_MODE=api_key
+export MCP_API_KEY=your-secret
+pnpm start
+```
+
+Health check: `GET /health`  
+MCP endpoint: `POST /mcp` (requires `X-API-Key` when auth enabled)
+
+See [docs/DEPLOY.md](docs/DEPLOY.md) for Docker, graceful shutdown, and production checklist.
+
+### Docker
+
+```bash
+pnpm docker:build
+docker run --rm -p 3100:3100 \
+  -e MCP_AUTH_MODE=api_key \
+  -e MCP_API_KEY=your-secret \
+  zuupee/mcp-server:local
 ```
 
 ### Cursor configuration
@@ -85,6 +112,14 @@ Environment variables (see `.env.example`):
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
+| `MCP_HTTP_PORT` | `3100` | HTTP listen port |
+| `MCP_HTTP_HOST` | `127.0.0.1` | Bind address (`0.0.0.0` for Docker) |
+| `MCP_HTTP_PATH` | `/mcp` | Streamable HTTP endpoint |
+| `MCP_HTTP_ALLOWED_HOSTS` | `localhost,127.0.0.1,[::1]` | Host header allowlist (DNS rebinding protection) |
+| `MCP_CORS_ORIGINS` | _(empty)_ | Comma-separated CORS origins |
+| `MCP_AUTH_MODE` | `none` | `none`, `api_key`, or `bearer` (HTTP transport) |
+| `MCP_API_KEY` | _(empty)_ | Required when auth mode is `api_key` or `bearer` |
 | `MCP_MODULES` | `meta,http,json,datetime,docs` | Comma-separated module ids, or `*` for all (except filesystem) |
 | `READ_ONLY` | `false` | Skip mutating modules (e.g. http) |
 | `HTTP_TOOL_ALLOWED_HOSTS` | _(empty)_ | Comma-separated allowed hostnames (deny-all if empty) |
@@ -97,7 +132,7 @@ Environment variables (see `.env.example`):
 CLI flags override env:
 
 ```bash
-mcp-server --transport stdio --modules meta,http --read-only
+mcp-server --transport http --port 3100 --auth api_key
 ```
 
 Enable the filesystem module:
@@ -122,7 +157,20 @@ pnpm build      # compile to dist/
 pnpm start      # run built bin
 pnpm test       # unit + integration tests
 pnpm inspect    # MCP Inspector against stdio
+pnpm docker:build
 pnpm lint       # ESLint (no console.log in src/)
+```
+
+## npm
+
+```bash
+npm publish --access public
+```
+
+Consumers:
+
+```bash
+npx @zuupee/mcp-server --transport http --port 3100 --auth api_key
 ```
 
 ## Architecture
@@ -134,7 +182,7 @@ src/
 ├── config.ts         # env + CLI parsing
 ├── context.ts        # per-request context
 ├── registry/         # module registration
-├── transport/        # stdio (http in Phase 3)
+├── transport/        # stdio + Streamable HTTP (Hono)
 ├── middleware/       # auth, read-only, audit logging
 ├── resources/        # docs + config schema resources
 ├── prompts/          # reusable prompt templates
