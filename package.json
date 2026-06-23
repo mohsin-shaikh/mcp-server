@@ -45,7 +45,10 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "typecheck": "tsc --noEmit",
-    "docker:build": "docker build -t zuupee/mcp-server:local ."
+    "docker:build": "docker build -t zuupee/mcp-server:local .",
+    "metrics:up": "docker compose -f docker-compose.observability.yml up -d",
+    "metrics:down": "docker compose -f docker-compose.observability.yml down",
+    "create-module": "tsx scripts/create-module.ts"
   },
   "dependencies": {
     "@cfworker/json-schema": "^4.1.1",
@@ -59,9 +62,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.57.0",
+    "@opentelemetry/resources": "^1.30.0",
+    "@opentelemetry/sdk-metrics": "^1.30.0",
+    "@opentelemetry/semantic-conventions": "^1.28.0",
     "@types/node": "^22.13.10",
     "eslint": "^9.21.0",
-    "oxfmt": "^0.56.0",
+    "oxfmt": "0.55.0",
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",

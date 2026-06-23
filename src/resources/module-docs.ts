@@ -45,6 +45,13 @@ Tools:
 - \`search_files\` — find files by name pattern under FS_ROOT
 
 Requires \`FS_ROOT\`. Not enabled by default. All paths are sandboxed; path traversal is blocked.`,
+  openapi: `# OpenAPI module
+
+Tools:
+- \`openapi_list_operations\` — fetch an OpenAPI 3 spec and list operationIds
+- \`openapi_call\` — invoke an operation by operationId
+
+Requires \`HTTP_TOOL_ALLOWED_HOSTS\` for spec and API hosts. Optional default spec via \`OPENAPI_SPEC_URL\`. Not enabled by default.`,
 };
 
 export function getModuleDoc(moduleId: string): string | undefined {

@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/server";
 import type { ServerConfig } from "./config.js";
 import { configSummary } from "./config.js";
 import type { ServerContext } from "./context.js";
-import { resolveModules } from "./modules/index.js";
+import { loadPluginsForConfig, resolveModules } from "./modules/index.js";
 import { registerModules } from "./registry/index.js";
 import type { McpModule } from "./registry/types.js";
 
@@ -59,6 +59,8 @@ function buildInstructions(
 }
 
 export async function createMcpServer(ctx: ServerContext) {
+  await loadPluginsForConfig(ctx.config.pluginsDir, ctx.config.modules);
+
   const { active, skipped } = modulesToRegister(ctx.config.modules, ctx.config.readOnly);
 
   const instructions = buildInstructions(

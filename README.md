@@ -11,6 +11,9 @@ General-purpose [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 - **Built-in generic tools** — HTTP fetch, JSON utilities, datetime helpers, server info
 - **Resources & prompts** — build plan, config schema, module docs, workflow templates
 - **Optional filesystem module** — sandboxed read-only file access under `FS_ROOT`
+- **Plugin loader** — dynamic local modules from `plugins/` via `MCP_PLUGINS_DIR`
+- **OpenAPI module** — call REST APIs from OpenAPI 3 specs at runtime
+- **OpenTelemetry metrics** — optional OTLP export for tool call telemetry
 - **Security defaults** — deny-all HTTP host allowlist, read-only mode, secret redaction
 - **Structured logging** to stderr (stdio-safe)
 
@@ -45,6 +48,17 @@ MCP endpoint: `POST /mcp` (requires `X-API-Key` when auth enabled)
 
 See [docs/DEPLOY.md](docs/DEPLOY.md) for Docker, graceful shutdown, and production checklist.
 
+### Metrics (Prometheus + Grafana)
+
+```bash
+pnpm metrics:up          # OTLP collector + Prometheus + Grafana
+# Set OTEL_ENABLED=true in .env.local, then run the server
+pnpm inspect             # call tools, wait ~15s for export
+# Grafana: http://localhost:3000 (admin/admin) → MCP Server Metrics dashboard
+```
+
+See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for full setup and troubleshooting.
+
 ### Docker
 
 ```bash
@@ -77,18 +91,20 @@ Add to `.cursor/mcp.json`:
 
 ## Built-in tools
 
-| Tool              | Module     | Description                                           |
-| ----------------- | ---------- | ----------------------------------------------------- |
-| `server_info`     | meta       | Server name, version, enabled modules, config summary |
-| `http_fetch`      | http       | GET/POST/PUT/PATCH/DELETE (host allowlist required)   |
-| `json_parse`      | json       | Parse JSON string                                     |
-| `json_stringify`  | json       | Serialize value to JSON                               |
-| `json_pick`       | json       | Extract paths from JSON                               |
-| `datetime_now`    | datetime   | Current time (ISO 8601)                               |
-| `datetime_format` | datetime   | Format/parse ISO date strings                         |
-| `read_file`       | filesystem | Read file under `FS_ROOT` (opt-in)                    |
-| `list_dir`        | filesystem | List directory under `FS_ROOT` (opt-in)               |
-| `search_files`    | filesystem | Search files by pattern under `FS_ROOT` (opt-in)      |
+| Tool                      | Module     | Description                                           |
+| ------------------------- | ---------- | ----------------------------------------------------- |
+| `server_info`             | meta       | Server name, version, enabled modules, config summary |
+| `http_fetch`              | http       | GET/POST/PUT/PATCH/DELETE (host allowlist required)   |
+| `json_parse`              | json       | Parse JSON string                                     |
+| `json_stringify`          | json       | Serialize value to JSON                               |
+| `json_pick`               | json       | Extract paths from JSON                               |
+| `datetime_now`            | datetime   | Current time (ISO 8601)                               |
+| `datetime_format`         | datetime   | Format/parse ISO date strings                         |
+| `read_file`               | filesystem | Read file under `FS_ROOT` (opt-in)                    |
+| `list_dir`                | filesystem | List directory under `FS_ROOT` (opt-in)               |
+| `search_files`            | filesystem | Search files by pattern under `FS_ROOT` (opt-in)      |
+| `openapi_list_operations` | openapi    | List operations from an OpenAPI 3 spec (opt-in)       |
+| `openapi_call`            | openapi    | Call an OpenAPI operation by `operationId` (opt-in)   |
 
 ## Resources
 
@@ -112,24 +128,28 @@ Copy `.env.example` to `.env.local` for local development — the server loads `
 
 Environment variables (see `.env.example`):
 
-| Variable                       | Default                        | Description                                                    |
-| ------------------------------ | ------------------------------ | -------------------------------------------------------------- |
-| `MCP_TRANSPORT`                | `stdio`                        | `stdio` or `http`                                              |
-| `MCP_HTTP_PORT`                | `3100`                         | HTTP listen port                                               |
-| `MCP_HTTP_HOST`                | `127.0.0.1`                    | Bind address (`0.0.0.0` for Docker)                            |
-| `MCP_HTTP_PATH`                | `/mcp`                         | Streamable HTTP endpoint                                       |
-| `MCP_HTTP_ALLOWED_HOSTS`       | `localhost,127.0.0.1,[::1]`    | Host header allowlist (DNS rebinding protection)               |
-| `MCP_CORS_ORIGINS`             | _(empty)_                      | Comma-separated CORS origins                                   |
-| `MCP_AUTH_MODE`                | `none`                         | `none`, `api_key`, or `bearer` (HTTP transport)                |
-| `MCP_API_KEY`                  | _(empty)_                      | Required when auth mode is `api_key` or `bearer`               |
-| `MCP_MODULES`                  | `meta,http,json,datetime,docs` | Comma-separated module ids, or `*` for all (except filesystem) |
-| `READ_ONLY`                    | `false`                        | Skip mutating modules (e.g. http)                              |
-| `HTTP_TOOL_ALLOWED_HOSTS`      | _(empty)_                      | Comma-separated allowed hostnames (deny-all if empty)          |
-| `HTTP_TOOL_MAX_RESPONSE_BYTES` | `1048576`                      | Max response size                                              |
-| `HTTP_TOOL_TIMEOUT_MS`         | `10000`                        | Request timeout                                                |
-| `FS_ROOT`                      | _(empty)_                      | Sandbox root for filesystem module                             |
-| `FS_MAX_READ_BYTES`            | `1048576`                      | Max bytes read per file                                        |
-| `LOG_LEVEL`                    | `info`                         | Log level (stderr only)                                        |
+| Variable                       | Default                            | Description                                                    |
+| ------------------------------ | ---------------------------------- | -------------------------------------------------------------- |
+| `MCP_TRANSPORT`                | `stdio`                            | `stdio` or `http`                                              |
+| `MCP_HTTP_PORT`                | `3100`                             | HTTP listen port                                               |
+| `MCP_HTTP_HOST`                | `127.0.0.1`                        | Bind address (`0.0.0.0` for Docker)                            |
+| `MCP_HTTP_PATH`                | `/mcp`                             | Streamable HTTP endpoint                                       |
+| `MCP_HTTP_ALLOWED_HOSTS`       | `localhost,127.0.0.1,[::1]`        | Host header allowlist (DNS rebinding protection)               |
+| `MCP_CORS_ORIGINS`             | _(empty)_                          | Comma-separated CORS origins                                   |
+| `MCP_AUTH_MODE`                | `none`                             | `none`, `api_key`, or `bearer` (HTTP transport)                |
+| `MCP_API_KEY`                  | _(empty)_                          | Required when auth mode is `api_key` or `bearer`               |
+| `MCP_MODULES`                  | `meta,http,json,datetime,docs`     | Comma-separated module ids, or `*` for all (except filesystem) |
+| `READ_ONLY`                    | `false`                            | Skip mutating modules (e.g. http)                              |
+| `HTTP_TOOL_ALLOWED_HOSTS`      | _(empty)_                          | Comma-separated allowed hostnames (deny-all if empty)          |
+| `HTTP_TOOL_MAX_RESPONSE_BYTES` | `1048576`                          | Max response size                                              |
+| `HTTP_TOOL_TIMEOUT_MS`         | `10000`                            | Request timeout                                                |
+| `FS_ROOT`                      | _(empty)_                          | Sandbox root for filesystem module                             |
+| `FS_MAX_READ_BYTES`            | `1048576`                          | Max bytes read per file                                        |
+| `MCP_PLUGINS_DIR`              | `./plugins`                        | Local plugin modules directory                                 |
+| `OTEL_ENABLED`                 | `false`                            | Export OpenTelemetry metrics                                   |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`  | `http://localhost:4318/v1/metrics` | OTLP HTTP metrics endpoint (requires collector)                |
+| `OPENAPI_SPEC_URL`             | _(empty)_                          | Default OpenAPI spec for `openapi` module                      |
+| `LOG_LEVEL`                    | `info`                             | Log level (stderr only)                                        |
 
 CLI flags override env:
 
@@ -145,9 +165,18 @@ FS_ROOT=/path/to/project MCP_MODULES=meta,docs,filesystem pnpm dev
 
 ## Adding a custom module
 
+### Option A: Scaffold a plugin
+
+```bash
+pnpm create-module my-service
+# Enable with MCP_MODULES=meta,my-service
+```
+
+### Option B: Manual plugin
+
 1. Create `plugins/my-service/index.ts` implementing `McpModule`
 2. Register tools that call your backend via `ctx.http` or `ctx.secrets`
-3. Wire the module into `MCP_MODULES` (Phase 4 adds dynamic plugin loading)
+3. Add the plugin id to `MCP_MODULES`
 
 See `plugins/example/index.ts` and `docs/build-plan.md` for the full extension guide.
 
@@ -160,6 +189,8 @@ pnpm start      # run built bin
 pnpm test       # unit + integration tests
 pnpm inspect    # MCP Inspector against stdio
 pnpm docker:build
+pnpm metrics:up   # local Prometheus + Grafana stack
+pnpm create-module my-service
 pnpm lint       # ESLint (no console.log in src/)
 pnpm format        # format with oxfmt
 pnpm format:check  # check formatting (CI)
@@ -191,7 +222,8 @@ src/
 ├── resources/        # docs + config schema resources
 ├── prompts/          # reusable prompt templates
 ├── modules/          # built-in modules
-└── lib/              # errors, format, schema, result, fs, tool helpers
+├── plugins/          # plugin loader
+└── lib/              # errors, format, schema, result, fs, tool, metrics, openapi
 ```
 
 ## License

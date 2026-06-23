@@ -87,6 +87,29 @@ export function getConfigJsonSchema(): Record<string, unknown> {
         default: 1048576,
         description: "Max bytes read per file",
       },
+      MCP_PLUGINS_DIR: {
+        type: "string",
+        default: "./plugins",
+        description: "Directory for local plugin modules",
+      },
+      OTEL_ENABLED: {
+        type: "boolean",
+        default: false,
+        description: "Enable OpenTelemetry metrics export",
+      },
+      OTEL_EXPORTER_OTLP_ENDPOINT: {
+        type: "string",
+        description: "OTLP HTTP metrics endpoint",
+      },
+      OPENAPI_SPEC_URL: {
+        type: "string",
+        description: "Default OpenAPI spec URL for openapi module",
+      },
+      OPENAPI_CACHE_TTL_MS: {
+        type: "integer",
+        default: 300000,
+        description: "OpenAPI spec cache TTL in milliseconds",
+      },
     },
   };
 }

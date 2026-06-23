@@ -1,0 +1,10 @@
+apiVersion: 1
+
+providers:
+  - name: MCP Server
+    folder: MCP
+    type: file
+    disableDeletion: true
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards
