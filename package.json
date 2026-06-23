@@ -1,0 +1,19 @@
+{
+  "name": "zuupee-mcp",
+  "private": true,
+  "description": "Zuupee MCP monorepo — server, client, and chatbot stack",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "test:integration": "pnpm -C mcp-client test:integration",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "dev:chat": "pnpm -C chat-api dev",
+    "dev:mcp-client": "pnpm -C mcp-client dev"
+  }
+}
