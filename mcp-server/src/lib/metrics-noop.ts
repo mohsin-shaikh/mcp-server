@@ -1,4 +1,4 @@
-import type { MetricsRecorder } from "../lib/metrics.js";
+import type { MetricsRecorder } from "./metrics.js";
 
 export const noopMetrics: MetricsRecorder = {
   recordToolCall() {
