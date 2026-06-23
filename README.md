@@ -5,9 +5,12 @@ General-purpose [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 ## Features
 
 - **stdio transport** for local development (Cursor, Claude Desktop)
+- **Streamable HTTP transport** for remote deployment (Hono + session management)
 - **Pluggable modules** — add tools without touching core transport code
 - **Schema-first validation** with Zod
 - **Built-in generic tools** — HTTP fetch, JSON utilities, datetime helpers, server info
+- **Resources & prompts** — build plan, config schema, module docs, workflow templates
+- **Optional filesystem module** — sandboxed read-only file access under `FS_ROOT`
 - **Security defaults** — deny-all HTTP host allowlist, read-only mode, secret redaction
 - **Structured logging** to stderr (stdio-safe)
 
@@ -23,7 +26,33 @@ General-purpose [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 ```bash
 pnpm install
 cp .env.example .env.local
-pnpm dev
+pnpm dev              # stdio server
+pnpm dev:http         # HTTP server on :3100
+```
+
+### Remote HTTP mode
+
+```bash
+export MCP_TRANSPORT=http
+export MCP_HTTP_HOST=0.0.0.0
+export MCP_AUTH_MODE=api_key
+export MCP_API_KEY=your-secret
+pnpm start
+```
+
+Health check: `GET /health`  
+MCP endpoint: `POST /mcp` (requires `X-API-Key` when auth enabled)
+
+See [docs/DEPLOY.md](docs/DEPLOY.md) for Docker, graceful shutdown, and production checklist.
+
+### Docker
+
+```bash
+pnpm docker:build
+docker run --rm -p 3100:3100 \
+  -e MCP_AUTH_MODE=api_key \
+  -e MCP_API_KEY=your-secret \
+  zuupee/mcp-server:local
 ```
 
 ### Cursor configuration
@@ -37,7 +66,7 @@ Add to `.cursor/mcp.json`:
       "command": "pnpm",
       "args": ["--dir", "/path/to/mcp-server", "dev"],
       "env": {
-        "MCP_MODULES": "meta,http,json,datetime",
+        "MCP_MODULES": "meta,http,json,datetime,docs",
         "READ_ONLY": "true",
         "HTTP_TOOL_ALLOWED_HOSTS": "api.github.com,httpbin.org"
       }
@@ -57,6 +86,25 @@ Add to `.cursor/mcp.json`:
 | `json_pick` | json | Extract paths from JSON |
 | `datetime_now` | datetime | Current time (ISO 8601) |
 | `datetime_format` | datetime | Format/parse ISO date strings |
+| `read_file` | filesystem | Read file under `FS_ROOT` (opt-in) |
+| `list_dir` | filesystem | List directory under `FS_ROOT` (opt-in) |
+| `search_files` | filesystem | Search files by pattern under `FS_ROOT` (opt-in) |
+
+## Resources
+
+| URI | Content |
+|-----|---------|
+| `mcp://docs/build-plan` | Project build plan |
+| `mcp://docs/modules/{id}` | Per-module usage docs |
+| `mcp://config/schema` | JSON Schema of server config |
+
+## Prompts
+
+| Prompt | Purpose |
+|--------|---------|
+| `explore_api` | Safely discover and call an unknown REST API |
+| `debug_tool_error` | Checklist when a tool call fails |
+| `design_new_module` | Guide for adding a new `McpModule` |
 
 ## Configuration
 
@@ -64,17 +112,33 @@ Environment variables (see `.env.example`):
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MCP_MODULES` | `meta,http,json,datetime` | Comma-separated module ids, or `*` for all |
+| `MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
+| `MCP_HTTP_PORT` | `3100` | HTTP listen port |
+| `MCP_HTTP_HOST` | `127.0.0.1` | Bind address (`0.0.0.0` for Docker) |
+| `MCP_HTTP_PATH` | `/mcp` | Streamable HTTP endpoint |
+| `MCP_HTTP_ALLOWED_HOSTS` | `localhost,127.0.0.1,[::1]` | Host header allowlist (DNS rebinding protection) |
+| `MCP_CORS_ORIGINS` | _(empty)_ | Comma-separated CORS origins |
+| `MCP_AUTH_MODE` | `none` | `none`, `api_key`, or `bearer` (HTTP transport) |
+| `MCP_API_KEY` | _(empty)_ | Required when auth mode is `api_key` or `bearer` |
+| `MCP_MODULES` | `meta,http,json,datetime,docs` | Comma-separated module ids, or `*` for all (except filesystem) |
 | `READ_ONLY` | `false` | Skip mutating modules (e.g. http) |
 | `HTTP_TOOL_ALLOWED_HOSTS` | _(empty)_ | Comma-separated allowed hostnames (deny-all if empty) |
 | `HTTP_TOOL_MAX_RESPONSE_BYTES` | `1048576` | Max response size |
 | `HTTP_TOOL_TIMEOUT_MS` | `10000` | Request timeout |
+| `FS_ROOT` | _(empty)_ | Sandbox root for filesystem module |
+| `FS_MAX_READ_BYTES` | `1048576` | Max bytes read per file |
 | `LOG_LEVEL` | `info` | Log level (stderr only) |
 
 CLI flags override env:
 
 ```bash
-mcp-server --transport stdio --modules meta,http --read-only
+mcp-server --transport http --port 3100 --auth api_key
+```
+
+Enable the filesystem module:
+
+```bash
+FS_ROOT=/path/to/project MCP_MODULES=meta,docs,filesystem pnpm dev
 ```
 
 ## Adding a custom module
@@ -93,7 +157,20 @@ pnpm build      # compile to dist/
 pnpm start      # run built bin
 pnpm test       # unit + integration tests
 pnpm inspect    # MCP Inspector against stdio
+pnpm docker:build
 pnpm lint       # ESLint (no console.log in src/)
+```
+
+## npm
+
+```bash
+npm publish --access public
+```
+
+Consumers:
+
+```bash
+npx @zuupee/mcp-server --transport http --port 3100 --auth api_key
 ```
 
 ## Architecture
@@ -105,10 +182,12 @@ src/
 ├── config.ts         # env + CLI parsing
 ├── context.ts        # per-request context
 ├── registry/         # module registration
-├── transport/        # stdio (http in Phase 3)
+├── transport/        # stdio + Streamable HTTP (Hono)
 ├── middleware/       # auth, read-only, audit logging
-├── modules/          # built-in: meta, http, json, datetime
-└── lib/              # errors, format, schema, result helpers
+├── resources/        # docs + config schema resources
+├── prompts/          # reusable prompt templates
+├── modules/          # built-in modules
+└── lib/              # errors, format, schema, result, fs, tool helpers
 ```
 
 ## License

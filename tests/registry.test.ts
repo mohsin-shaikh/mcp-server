@@ -10,7 +10,7 @@ describe("config", () => {
   it("loads defaults from env", () => {
     const config = loadConfigFromEnv();
     expect(config.serverName).toBe("mcp-server");
-    expect(config.modules).toEqual(["meta", "http", "json", "datetime"]);
+    expect(config.modules).toEqual(["meta", "http", "json", "datetime", "docs"]);
     expect(config.httpAllowedHosts).toEqual([]);
   });
 
@@ -45,8 +45,14 @@ describe("registry", () => {
     expect(registeredTools).not.toContain("http_fetch");
   });
 
-  it("resolves wildcard modules", () => {
+  it("resolves wildcard modules without filesystem", () => {
     const modules = resolveModules(["*"]);
-    expect(modules.map((m) => m.id)).toEqual(["meta", "http", "json", "datetime"]);
+    expect(modules.map((m) => m.id)).toEqual([
+      "meta",
+      "http",
+      "json",
+      "datetime",
+      "docs",
+    ]);
   });
 });

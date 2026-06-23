@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { McpModule } from "../../registry/types.js";
-import { logToolCall, logToolResult } from "../../middleware/audit-log.js";
 import { jsonValueSchema } from "../../lib/schema.js";
 import { toolError, toolJson, toolText } from "../../lib/result.js";
+import { wrapToolHandler } from "../../lib/tool.js";
 
 function getByPath(value: unknown, path: string): unknown {
   const segments = path
@@ -43,17 +43,14 @@ export const jsonModule: McpModule = {
         }),
         annotations: { readOnlyHint: true },
       },
-      async ({ text }) => {
-        logToolCall(ctx, "json_parse");
+      wrapToolHandler(ctx, "json_parse", async ({ text }) => {
         try {
           const parsed = JSON.parse(text) as unknown;
-          logToolResult(ctx, "json_parse", true);
           return toolJson({ parsed });
         } catch (err) {
-          logToolResult(ctx, "json_parse", false);
           return toolError(err instanceof Error ? err.message : "Invalid JSON");
         }
-      },
+      }),
     );
 
     server.registerTool(
@@ -67,17 +64,13 @@ export const jsonModule: McpModule = {
         }),
         annotations: { readOnlyHint: true },
       },
-      async ({ value, indent }) => {
-        logToolCall(ctx, "json_stringify");
+      wrapToolHandler(ctx, "json_stringify", async ({ value, indent }) => {
         try {
-          const text = JSON.stringify(value, null, indent);
-          logToolResult(ctx, "json_stringify", true);
-          return toolText(text);
+          return toolText(JSON.stringify(value, null, indent));
         } catch (err) {
-          logToolResult(ctx, "json_stringify", false);
           return toolError(err);
         }
-      },
+      }),
     );
 
     server.registerTool(
@@ -95,15 +88,13 @@ export const jsonModule: McpModule = {
         }),
         annotations: { readOnlyHint: true },
       },
-      async ({ value, paths }) => {
-        logToolCall(ctx, "json_pick", { pathCount: paths.length });
+      wrapToolHandler(ctx, "json_pick", async ({ value, paths }) => {
         const picked: Record<string, unknown> = {};
         for (const path of paths) {
           picked[path] = getByPath(value, path);
         }
-        logToolResult(ctx, "json_pick", true);
         return toolJson({ picked });
-      },
+      }),
     );
   },
 };

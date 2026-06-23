@@ -51,6 +51,8 @@ function buildInstructions(
     "",
     "Datetime defaults: ISO 8601 UTC unless a timezone is specified.",
     "Prefer json_parse/json_stringify/json_pick for JSON manipulation.",
+    "Resources: mcp://docs/build-plan, mcp://docs/modules/{id}, mcp://config/schema.",
+    "Prompts: explore_api, debug_tool_error, design_new_module (when docs module is enabled).",
   );
 
   return lines.join("\n");

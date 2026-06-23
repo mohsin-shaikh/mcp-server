@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpModule } from "../../registry/types.js";
-import { logToolCall, logToolResult } from "../../middleware/audit-log.js";
 import { toolJson } from "../../lib/result.js";
+import { wrapToolHandler } from "../../lib/tool.js";
 import { resolveModules } from "../index.js";
 
 export const metaModule: McpModule = {
@@ -20,8 +20,7 @@ export const metaModule: McpModule = {
           readOnlyHint: true,
         },
       },
-      async () => {
-        logToolCall(ctx, "server_info");
+      wrapToolHandler(ctx, "server_info", async () => {
         const modules = resolveModules(ctx.config.modules);
         const active: string[] = [];
         const skipped: string[] = [];
@@ -34,7 +33,7 @@ export const metaModule: McpModule = {
           }
         }
 
-        const info = {
+        return toolJson({
           name: ctx.config.serverName,
           version: ctx.config.serverVersion,
           modules: active,
@@ -46,12 +45,11 @@ export const metaModule: McpModule = {
             httpMaxBytes: ctx.config.httpMaxBytes,
             httpTimeoutMs: ctx.config.httpTimeoutMs,
             authMode: ctx.config.authMode,
+            fsRootConfigured: Boolean(ctx.config.fsRoot),
+            fsMaxReadBytes: ctx.config.fsMaxReadBytes,
           },
-        };
-
-        logToolResult(ctx, "server_info", true);
-        return toolJson(info);
-      },
+        });
+      }),
     );
   },
 };

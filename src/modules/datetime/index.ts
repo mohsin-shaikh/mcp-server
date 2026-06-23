@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { McpModule } from "../../registry/types.js";
-import { logToolCall, logToolResult } from "../../middleware/audit-log.js";
 import { timezoneSchema } from "../../lib/schema.js";
 import { toolError, toolJson } from "../../lib/result.js";
+import { wrapToolHandler } from "../../lib/tool.js";
 
 function formatInTimezone(date: Date, timezone?: string): string {
   if (!timezone) {
@@ -36,18 +36,15 @@ export const datetimeModule: McpModule = {
         }),
         annotations: { readOnlyHint: true },
       },
-      async ({ timezone }) => {
-        logToolCall(ctx, "datetime_now", { timezone });
+      wrapToolHandler(ctx, "datetime_now", async ({ timezone }) => {
         const now = new Date();
-        const result = {
+        return toolJson({
           iso: now.toISOString(),
           unixMs: now.getTime(),
           timezone: timezone ?? "UTC",
           formatted: formatInTimezone(now, timezone),
-        };
-        logToolResult(ctx, "datetime_now", true);
-        return toolJson(result);
-      },
+        });
+      }),
     );
 
     server.registerTool(
@@ -61,24 +58,20 @@ export const datetimeModule: McpModule = {
         }),
         annotations: { readOnlyHint: true },
       },
-      async ({ input, timezone }) => {
-        logToolCall(ctx, "datetime_format", { timezone });
+      wrapToolHandler(ctx, "datetime_format", async ({ input, timezone }) => {
         const parsed = new Date(input);
         if (Number.isNaN(parsed.getTime())) {
-          logToolResult(ctx, "datetime_format", false);
           return toolError("Invalid date string. Use ISO 8601 format.");
         }
 
-        const result = {
+        return toolJson({
           input,
           iso: parsed.toISOString(),
           unixMs: parsed.getTime(),
           timezone: timezone ?? "UTC",
           formatted: formatInTimezone(parsed, timezone),
-        };
-        logToolResult(ctx, "datetime_format", true);
-        return toolJson(result);
-      },
+        });
+      }),
     );
   },
 };
