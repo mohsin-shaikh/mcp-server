@@ -23,6 +23,25 @@ export function getConfigJsonSchema(): Record<string, unknown> {
         type: "integer",
         default: 3100,
       },
+      MCP_HTTP_HOST: {
+        type: "string",
+        default: "127.0.0.1",
+        description: "Bind address for HTTP transport",
+      },
+      MCP_HTTP_PATH: {
+        type: "string",
+        default: "/mcp",
+        description: "MCP Streamable HTTP endpoint path",
+      },
+      MCP_HTTP_ALLOWED_HOSTS: {
+        type: "string",
+        default: "localhost,127.0.0.1,[::1]",
+        description: "Allowed Host header values (DNS rebinding protection)",
+      },
+      MCP_CORS_ORIGINS: {
+        type: "string",
+        description: "Comma-separated CORS origins; empty disables CORS",
+      },
       MCP_MODULES: {
         type: "string",
         default: "meta,http,json,datetime,docs",

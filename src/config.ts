@@ -10,6 +10,10 @@ export interface ServerConfig {
   serverVersion: string;
   transport: Transport;
   httpPort: number;
+  httpBindHost: string;
+  httpPath: string;
+  httpHostAllowlist: string[];
+  corsOrigins: string[];
   modules: string[];
   readOnly: boolean;
   logLevel: LogLevel;
@@ -83,6 +87,12 @@ export function loadConfigFromEnv(): ServerConfig {
     serverVersion: process.env["MCP_SERVER_VERSION"] ?? "0.1.0",
     transport: parseTransport(process.env["MCP_TRANSPORT"]),
     httpPort: envInt("MCP_HTTP_PORT", 3100),
+    httpBindHost: process.env["MCP_HTTP_HOST"] ?? "127.0.0.1",
+    httpPath: process.env["MCP_HTTP_PATH"] ?? "/mcp",
+    httpHostAllowlist: parseCommaList(
+      process.env["MCP_HTTP_ALLOWED_HOSTS"] ?? "localhost,127.0.0.1,[::1]",
+    ),
+    corsOrigins: parseCommaList(process.env["MCP_CORS_ORIGINS"]),
     modules: parseModules(process.env["MCP_MODULES"]),
     readOnly: envBool("READ_ONLY", false),
     logLevel: parseLogLevel(process.env["LOG_LEVEL"]),
@@ -148,6 +158,9 @@ export function configSummary(config: ServerConfig): Record<string, unknown> {
     serverName: config.serverName,
     serverVersion: config.serverVersion,
     transport: config.transport,
+    httpPort: config.httpPort,
+    httpBindHost: config.httpBindHost,
+    httpPath: config.httpPath,
     modules: config.modules,
     readOnly: config.readOnly,
     authMode: config.authMode,
