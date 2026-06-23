@@ -1,4 +1,7 @@
 import { loadConfig } from "./config.js";
+import { loadEnvFiles } from "./load-env.js";
+
+loadEnvFiles();
 import { createContext } from "./context.js";
 import { createLogger } from "./lib/logger.js";
 import { validateTransportAuth } from "./middleware/auth.js";

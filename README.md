@@ -108,6 +108,8 @@ Add to `.cursor/mcp.json`:
 
 ## Configuration
 
+Copy `.env.example` to `.env.local` for local development — the server loads `.env.local` (and `.env`) from the project root on startup. Shell environment variables always take precedence.
+
 Environment variables (see `.env.example`):
 
 | Variable                       | Default                        | Description                                                    |
