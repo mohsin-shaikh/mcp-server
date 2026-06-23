@@ -422,14 +422,14 @@ Never return stack traces, env var values, or internal file paths.
 
 ## 12. Security checklist
 
-- [ ] `HTTP_TOOL_ALLOWED_HOSTS` defaults to empty (deny-all) unless explicitly configured
-- [ ] Filesystem module sandboxed to `FS_ROOT`; no path traversal
-- [ ] Shell module off by default; command allowlist if enabled
-- [ ] Secrets from env only; redaction in logs and tool output
-- [ ] Streamable HTTP: Host header validation / DNS rebinding protection enabled
-- [ ] CORS restricted when HTTP transport is public
+- [x] `HTTP_TOOL_ALLOWED_HOSTS` defaults to empty (deny-all) unless explicitly configured
+- [x] Filesystem module sandboxed to `FS_ROOT`; no path traversal
+- [x] Shell module off by default; command allowlist if enabled
+- [x] Secrets from env only; redaction in logs and tool output
+- [x] Streamable HTTP: Host header validation / DNS rebinding protection enabled
+- [x] CORS restricted when HTTP transport is public
 - [ ] `pnpm audit` in CI
-- [ ] ESLint rule or script: no `console.log` in `src/` (stdio safety)
+- [x] ESLint rule or script: no `console.log` in `src/` (stdio safety)
 
 ---
 
@@ -507,31 +507,31 @@ Published package:
 
 ### Phase 1 — Core + MVP modules (3–5 days)
 
-- [ ] Scaffold repo: package.json, tsconfig, ESLint, Vitest, tsup
-- [ ] Config parsing (env + CLI)
-- [ ] `McpServer` factory with server instructions
-- [ ] Module registry + `McpModule` interface
-- [ ] stdio transport
-- [ ] Built-in modules: `meta`, `http`, `json`, `datetime`
-- [ ] Error helpers, truncation, host allowlist
-- [ ] README + `.env.example` + Cursor mcp.json snippet
-- [ ] MCP Inspector smoke test
+- [x] Scaffold repo: package.json, tsconfig, ESLint, Vitest, tsup
+- [x] Config parsing (env + CLI)
+- [x] `McpServer` factory with server instructions
+- [x] Module registry + `McpModule` interface
+- [x] stdio transport
+- [x] Built-in modules: `meta`, `http`, `json`, `datetime`
+- [x] Error helpers, truncation, host allowlist
+- [x] README + `.env.example` + Cursor mcp.json snippet
+- [x] MCP Inspector smoke test
 
 ### Phase 2 — Resources, prompts, more modules (3–5 days)
 
-- [ ] Resource provider for docs/config schema
-- [ ] Prompt templates
-- [ ] Optional `filesystem` module (sandboxed)
-- [ ] Read-only middleware + audit logging
-- [ ] Integration test: spawn stdio, call `server_info`
+- [x] Resource provider for docs/config schema
+- [x] Prompt templates
+- [x] Optional `filesystem` module (sandboxed)
+- [x] Read-only middleware + audit logging
+- [x] Integration test: spawn stdio, call `server_info`
 
 ### Phase 3 — Remote deployment (2–4 days)
 
-- [ ] Streamable HTTP transport (Hono)
-- [ ] Transport auth (API key)
-- [ ] Docker image
+- [x] Streamable HTTP transport (Hono)
+- [x] Transport auth (API key)
+- [x] Docker image
 - [ ] Publish to npm
-- [ ] Deploy runbook (health check, graceful shutdown)
+- [x] Deploy runbook (health check, graceful shutdown)
 
 ### Phase 4 — Extensibility polish (ongoing)
 
