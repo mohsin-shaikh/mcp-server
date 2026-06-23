@@ -46,6 +46,8 @@
     "format:check": "oxfmt --check",
     "typecheck": "tsc --noEmit",
     "docker:build": "docker build -t zuupee/mcp-server:local .",
+    "metrics:up": "docker compose -f docker-compose.observability.yml up -d",
+    "metrics:down": "docker compose -f docker-compose.observability.yml down",
     "create-module": "tsx scripts/create-module.ts"
   },
   "dependencies": {
