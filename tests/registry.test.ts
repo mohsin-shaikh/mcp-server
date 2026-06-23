@@ -4,6 +4,7 @@ import { resolveModules } from "../src/modules/index.js";
 import { registerModules } from "../src/registry/index.js";
 import { createContext } from "../src/context.js";
 import { createLogger } from "../src/lib/logger.js";
+import { noopMetrics } from "../src/lib/metrics-noop.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 
 describe("config", () => {
@@ -29,7 +30,7 @@ describe("registry", () => {
       modules: ["meta", "http", "json"],
     });
     const logger = createLogger("fatal");
-    const ctx = createContext(config, logger);
+    const ctx = createContext(config, logger, noopMetrics);
 
     const registeredTools: string[] = [];
     const mockServer = {

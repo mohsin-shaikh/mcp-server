@@ -1,4 +1,5 @@
 import { parseArgs } from "node:util";
+import path from "node:path";
 import { parseCommaList } from "./lib/format.js";
 
 export type Transport = "stdio" | "http";
@@ -24,6 +25,11 @@ export interface ServerConfig {
   httpTimeoutMs: number;
   fsRoot: string | undefined;
   fsMaxReadBytes: number;
+  pluginsDir: string;
+  otelEnabled: boolean;
+  otelEndpoint: string | undefined;
+  openapiSpecUrl: string | undefined;
+  openapiCacheTtlMs: number;
 }
 
 const DEFAULT_MODULES = ["meta", "http", "json", "datetime", "docs"];
@@ -96,6 +102,11 @@ export function loadConfigFromEnv(): ServerConfig {
     httpTimeoutMs: envInt("HTTP_TOOL_TIMEOUT_MS", 10_000),
     fsRoot: process.env["FS_ROOT"],
     fsMaxReadBytes: envInt("FS_MAX_READ_BYTES", 1_048_576),
+    pluginsDir: process.env["MCP_PLUGINS_DIR"] ?? path.join(process.cwd(), "plugins"),
+    otelEnabled: envBool("OTEL_ENABLED", false),
+    otelEndpoint: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
+    openapiSpecUrl: process.env["OPENAPI_SPEC_URL"],
+    openapiCacheTtlMs: envInt("OPENAPI_CACHE_TTL_MS", 300_000),
   };
 }
 
@@ -159,5 +170,8 @@ export function configSummary(config: ServerConfig): Record<string, unknown> {
     httpTimeoutMs: config.httpTimeoutMs,
     fsRootConfigured: Boolean(config.fsRoot),
     fsMaxReadBytes: config.fsMaxReadBytes,
+    pluginsDir: config.pluginsDir,
+    otelEnabled: config.otelEnabled,
+    openapiSpecUrl: config.openapiSpecUrl,
   };
 }

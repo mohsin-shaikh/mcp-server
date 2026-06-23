@@ -15,6 +15,7 @@ describe("resources", () => {
     expect(ids).toContain("meta");
     expect(ids).toContain("docs");
     expect(ids).toContain("filesystem");
+    expect(ids).toContain("openapi");
     expect(getModuleDoc("http")).toContain("http_fetch");
   });
 });

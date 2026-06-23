@@ -11,6 +11,9 @@ General-purpose [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 - **Built-in generic tools** — HTTP fetch, JSON utilities, datetime helpers, server info
 - **Resources & prompts** — build plan, config schema, module docs, workflow templates
 - **Optional filesystem module** — sandboxed read-only file access under `FS_ROOT`
+- **Plugin loader** — dynamic local modules from `plugins/` via `MCP_PLUGINS_DIR`
+- **OpenAPI module** — call REST APIs from OpenAPI 3 specs at runtime
+- **OpenTelemetry metrics** — optional OTLP export for tool call telemetry
 - **Security defaults** — deny-all HTTP host allowlist, read-only mode, secret redaction
 - **Structured logging** to stderr (stdio-safe)
 
@@ -77,18 +80,20 @@ Add to `.cursor/mcp.json`:
 
 ## Built-in tools
 
-| Tool              | Module     | Description                                           |
-| ----------------- | ---------- | ----------------------------------------------------- |
-| `server_info`     | meta       | Server name, version, enabled modules, config summary |
-| `http_fetch`      | http       | GET/POST/PUT/PATCH/DELETE (host allowlist required)   |
-| `json_parse`      | json       | Parse JSON string                                     |
-| `json_stringify`  | json       | Serialize value to JSON                               |
-| `json_pick`       | json       | Extract paths from JSON                               |
-| `datetime_now`    | datetime   | Current time (ISO 8601)                               |
-| `datetime_format` | datetime   | Format/parse ISO date strings                         |
-| `read_file`       | filesystem | Read file under `FS_ROOT` (opt-in)                    |
-| `list_dir`        | filesystem | List directory under `FS_ROOT` (opt-in)               |
-| `search_files`    | filesystem | Search files by pattern under `FS_ROOT` (opt-in)      |
+| Tool                      | Module     | Description                                           |
+| ------------------------- | ---------- | ----------------------------------------------------- |
+| `server_info`             | meta       | Server name, version, enabled modules, config summary |
+| `http_fetch`              | http       | GET/POST/PUT/PATCH/DELETE (host allowlist required)   |
+| `json_parse`              | json       | Parse JSON string                                     |
+| `json_stringify`          | json       | Serialize value to JSON                               |
+| `json_pick`               | json       | Extract paths from JSON                               |
+| `datetime_now`            | datetime   | Current time (ISO 8601)                               |
+| `datetime_format`         | datetime   | Format/parse ISO date strings                         |
+| `read_file`               | filesystem | Read file under `FS_ROOT` (opt-in)                    |
+| `list_dir`                | filesystem | List directory under `FS_ROOT` (opt-in)               |
+| `search_files`            | filesystem | Search files by pattern under `FS_ROOT` (opt-in)      |
+| `openapi_list_operations` | openapi    | List operations from an OpenAPI 3 spec (opt-in)       |
+| `openapi_call`            | openapi    | Call an OpenAPI operation by `operationId` (opt-in)   |
 
 ## Resources
 
@@ -129,6 +134,9 @@ Environment variables (see `.env.example`):
 | `HTTP_TOOL_TIMEOUT_MS`         | `10000`                        | Request timeout                                                |
 | `FS_ROOT`                      | _(empty)_                      | Sandbox root for filesystem module                             |
 | `FS_MAX_READ_BYTES`            | `1048576`                      | Max bytes read per file                                        |
+| `MCP_PLUGINS_DIR`              | `./plugins`                    | Local plugin modules directory                                 |
+| `OTEL_ENABLED`                 | `false`                        | Export OpenTelemetry metrics                                   |
+| `OPENAPI_SPEC_URL`             | _(empty)_                      | Default OpenAPI spec for `openapi` module                      |
 | `LOG_LEVEL`                    | `info`                         | Log level (stderr only)                                        |
 
 CLI flags override env:
@@ -145,9 +153,18 @@ FS_ROOT=/path/to/project MCP_MODULES=meta,docs,filesystem pnpm dev
 
 ## Adding a custom module
 
+### Option A: Scaffold a plugin
+
+```bash
+pnpm create-module my-service
+# Enable with MCP_MODULES=meta,my-service
+```
+
+### Option B: Manual plugin
+
 1. Create `plugins/my-service/index.ts` implementing `McpModule`
 2. Register tools that call your backend via `ctx.http` or `ctx.secrets`
-3. Wire the module into `MCP_MODULES` (Phase 4 adds dynamic plugin loading)
+3. Add the plugin id to `MCP_MODULES`
 
 See `plugins/example/index.ts` and `docs/build-plan.md` for the full extension guide.
 
@@ -160,6 +177,7 @@ pnpm start      # run built bin
 pnpm test       # unit + integration tests
 pnpm inspect    # MCP Inspector against stdio
 pnpm docker:build
+pnpm create-module my-service
 pnpm lint       # ESLint (no console.log in src/)
 pnpm format        # format with oxfmt
 pnpm format:check  # check formatting (CI)
@@ -191,7 +209,8 @@ src/
 ├── resources/        # docs + config schema resources
 ├── prompts/          # reusable prompt templates
 ├── modules/          # built-in modules
-└── lib/              # errors, format, schema, result, fs, tool helpers
+├── plugins/          # plugin loader
+└── lib/              # errors, format, schema, result, fs, tool, metrics, openapi
 ```
 
 ## License

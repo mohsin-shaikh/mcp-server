@@ -535,11 +535,11 @@ Published package:
 
 ### Phase 4 — Extensibility polish (ongoing)
 
-- [ ] Plugin loader (dynamic import from `plugins/` path)
-- [ ] `openapi` module (generate tools from spec)
-- [ ] OpenTelemetry metrics
-- [ ] CLI scaffolding: `pnpm create-module <name>`
-- [ ] Semver releases + changelog
+- [x] Plugin loader (dynamic import from `plugins/` path)
+- [x] `openapi` module (generate tools from spec)
+- [x] OpenTelemetry metrics
+- [x] CLI scaffolding: `pnpm create-module <name>`
+- [x] Semver releases + changelog
 
 ---
 

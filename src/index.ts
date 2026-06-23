@@ -4,6 +4,7 @@ import { loadEnvFiles } from "./load-env.js";
 loadEnvFiles();
 import { createContext } from "./context.js";
 import { createLogger } from "./lib/logger.js";
+import { createMetricsRecorder } from "./lib/metrics.js";
 import { validateTransportAuth } from "./middleware/auth.js";
 import { createMcpServer } from "./server.js";
 import { startHttpTransport } from "./transport/http.js";
@@ -17,9 +18,13 @@ export { registerModules } from "./registry/index.js";
 async function shutdown(
   logger: ReturnType<typeof createLogger>,
   close?: () => Promise<void>,
+  metricsShutdown?: () => Promise<void>,
 ): Promise<void> {
   if (close) {
     await close();
+  }
+  if (metricsShutdown) {
+    await metricsShutdown();
   }
   logger.info("Shutdown complete");
 }
@@ -29,7 +34,12 @@ export async function main(): Promise<void> {
   validateTransportAuth(config);
 
   const logger = createLogger(config.logLevel);
-  const ctx = createContext(config, logger);
+  const metrics = await createMetricsRecorder({
+    enabled: config.otelEnabled,
+    serviceName: config.serverName,
+    endpoint: config.otelEndpoint,
+  });
+  const ctx = createContext(config, logger, metrics);
 
   logger.info(
     {
@@ -37,6 +47,8 @@ export async function main(): Promise<void> {
       transport: config.transport,
       modules: config.modules,
       readOnly: config.readOnly,
+      otelEnabled: config.otelEnabled,
+      pluginsDir: config.pluginsDir,
     },
     "Starting MCP server",
   );
@@ -59,7 +71,7 @@ export async function main(): Promise<void> {
 
   const onSignal = (signal: string) => {
     logger.info({ signal, requestId: ctx.requestId }, "Received shutdown signal");
-    void shutdown(logger, closeTransport)
+    void shutdown(logger, closeTransport, () => metrics.shutdown())
       .then(() => {
         process.exit(0);
       })

@@ -33,6 +33,7 @@ export async function registerModules(
 
     ctx.logger.info({ moduleId: mod.id, requestId: ctx.requestId }, "Registering module");
     await mod.register(server, ctx);
+    ctx.metrics.recordModuleRegistration(mod.id);
     registered.push(mod.id);
   }
 

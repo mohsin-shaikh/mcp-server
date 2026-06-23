@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { ServerConfig } from "./config.js";
 import type { Logger } from "./lib/logger.js";
+import type { MetricsRecorder } from "./lib/metrics.js";
 
 export class SecretsStore {
   get(key: string): string | undefined {
@@ -27,6 +28,7 @@ export interface ServerContext {
   http: HttpClient;
   requestId: string;
   isHostAllowed: (url: string) => boolean;
+  metrics: MetricsRecorder;
 }
 
 function hostMatches(hostname: string, allowed: string): boolean {
@@ -56,6 +58,7 @@ export function createHostAllowlistChecker(allowedHosts: string[]) {
 export function createContext(
   config: ServerConfig,
   logger: Logger,
+  metrics: MetricsRecorder,
   requestId = randomUUID(),
 ): ServerContext {
   return {
@@ -65,5 +68,6 @@ export function createContext(
     http: { fetch: globalThis.fetch.bind(globalThis) },
     requestId,
     isHostAllowed: createHostAllowlistChecker(config.httpAllowedHosts),
+    metrics,
   };
 }
