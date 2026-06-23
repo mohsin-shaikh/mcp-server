@@ -23,13 +23,13 @@ export function formatTimeoutError(ms: number): string {
 }
 
 export function safeErrorMessage(err: unknown): string {
+  if (typeof err === "string") {
+    return err;
+  }
   if (err instanceof McpToolError) {
     return err.message;
   }
   if (err instanceof Error) {
-    if (err.name === "TimeoutError" || err.name === "AbortError") {
-      return err.message;
-    }
     return err.message;
   }
   return "An unexpected error occurred";
