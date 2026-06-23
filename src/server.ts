@@ -59,10 +59,7 @@ function buildInstructions(
 }
 
 export async function createMcpServer(ctx: ServerContext) {
-  const { active, skipped } = modulesToRegister(
-    ctx.config.modules,
-    ctx.config.readOnly,
-  );
+  const { active, skipped } = modulesToRegister(ctx.config.modules, ctx.config.readOnly);
 
   const instructions = buildInstructions(
     ctx.config,
@@ -78,11 +75,7 @@ export async function createMcpServer(ctx: ServerContext) {
     { instructions },
   );
 
-  const { moduleIds, skippedModuleIds } = await registerModules(
-    server,
-    ctx,
-    ctx.config.modules,
-  );
+  const { moduleIds, skippedModuleIds } = await registerModules(server, ctx, ctx.config.modules);
 
   return {
     server,

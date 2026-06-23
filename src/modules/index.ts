@@ -18,9 +18,7 @@ const BUILTIN_MODULES: McpModule[] = [
 const moduleById = new Map(BUILTIN_MODULES.map((mod) => [mod.id, mod]));
 
 /** Built-in modules enabled by MCP_MODULES=* (filesystem is opt-in only). */
-const DEFAULT_WILDCARD_MODULES = BUILTIN_MODULES.filter(
-  (mod) => mod.id !== "filesystem",
-);
+const DEFAULT_WILDCARD_MODULES = BUILTIN_MODULES.filter((mod) => mod.id !== "filesystem");
 
 export function getAllBuiltinModules(): McpModule[] {
   return [...DEFAULT_WILDCARD_MODULES];
@@ -41,11 +39,4 @@ export function resolveModules(moduleIds: string[]): McpModule[] {
   return resolved;
 }
 
-export {
-  metaModule,
-  httpModule,
-  jsonModule,
-  datetimeModule,
-  docsModule,
-  filesystemModule,
-};
+export { metaModule, httpModule, jsonModule, datetimeModule, docsModule, filesystemModule };

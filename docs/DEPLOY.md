@@ -95,14 +95,14 @@ In Kubernetes, set `terminationGracePeriodSeconds: 30` and use `preStop` hook if
 
 ## Security checklist
 
-| Item | Recommendation |
-|------|----------------|
-| Auth | Always set `MCP_AUTH_MODE=api_key` in production |
+| Item         | Recommendation                                            |
+| ------------ | --------------------------------------------------------- |
+| Auth         | Always set `MCP_AUTH_MODE=api_key` in production          |
 | Bind address | Use `0.0.0.0` in containers; restrict with network policy |
-| Host header | Set `MCP_HTTP_ALLOWED_HOSTS` to your public hostname |
-| CORS | Set `MCP_CORS_ORIGINS` only to trusted client origins |
-| HTTP tool | Keep `HTTP_TOOL_ALLOWED_HOSTS` minimal |
-| Secrets | Inject `MCP_API_KEY` via secrets manager, not image |
+| Host header  | Set `MCP_HTTP_ALLOWED_HOSTS` to your public hostname      |
+| CORS         | Set `MCP_CORS_ORIGINS` only to trusted client origins     |
+| HTTP tool    | Keep `HTTP_TOOL_ALLOWED_HOSTS` minimal                    |
+| Secrets      | Inject `MCP_API_KEY` via secrets manager, not image       |
 
 ## npm publish
 
@@ -124,9 +124,9 @@ npx @zuupee/mcp-server --transport http --port 3100 --auth api_key
 
 ## Troubleshooting
 
-| Symptom | Fix |
-|---------|-----|
-| `401 Unauthorized` | Check `X-API-Key` or Bearer token matches `MCP_API_KEY` |
-| `403` / host rejected | Add hostname to `MCP_HTTP_ALLOWED_HOSTS` |
-| `404 Session not found` | Include `Mcp-Session-Id` from initialize response |
-| Health check fails | Confirm `MCP_HTTP_PORT` matches exposed port |
+| Symptom                 | Fix                                                     |
+| ----------------------- | ------------------------------------------------------- |
+| `401 Unauthorized`      | Check `X-API-Key` or Bearer token matches `MCP_API_KEY` |
+| `403` / host rejected   | Add hostname to `MCP_HTTP_ALLOWED_HOSTS`                |
+| `404 Session not found` | Include `Mcp-Session-Id` from initialize response       |
+| Health check fails      | Confirm `MCP_HTTP_PORT` matches exposed port            |

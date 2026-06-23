@@ -76,10 +76,7 @@ export function registerResources(server: McpServer, ctx: ServerContext): void {
       if (!doc) {
         throw new Error(`Unknown module id: ${id}`);
       }
-      ctx.logger.debug(
-        { uri: uri.href, moduleId: id, requestId: ctx.requestId },
-        "Read resource",
-      );
+      ctx.logger.debug({ uri: uri.href, moduleId: id, requestId: ctx.requestId }, "Read resource");
       return {
         contents: [{ uri: uri.href, mimeType: "text/markdown", text: doc }],
       };

@@ -77,57 +77,57 @@ Add to `.cursor/mcp.json`:
 
 ## Built-in tools
 
-| Tool | Module | Description |
-|------|--------|-------------|
-| `server_info` | meta | Server name, version, enabled modules, config summary |
-| `http_fetch` | http | GET/POST/PUT/PATCH/DELETE (host allowlist required) |
-| `json_parse` | json | Parse JSON string |
-| `json_stringify` | json | Serialize value to JSON |
-| `json_pick` | json | Extract paths from JSON |
-| `datetime_now` | datetime | Current time (ISO 8601) |
-| `datetime_format` | datetime | Format/parse ISO date strings |
-| `read_file` | filesystem | Read file under `FS_ROOT` (opt-in) |
-| `list_dir` | filesystem | List directory under `FS_ROOT` (opt-in) |
-| `search_files` | filesystem | Search files by pattern under `FS_ROOT` (opt-in) |
+| Tool              | Module     | Description                                           |
+| ----------------- | ---------- | ----------------------------------------------------- |
+| `server_info`     | meta       | Server name, version, enabled modules, config summary |
+| `http_fetch`      | http       | GET/POST/PUT/PATCH/DELETE (host allowlist required)   |
+| `json_parse`      | json       | Parse JSON string                                     |
+| `json_stringify`  | json       | Serialize value to JSON                               |
+| `json_pick`       | json       | Extract paths from JSON                               |
+| `datetime_now`    | datetime   | Current time (ISO 8601)                               |
+| `datetime_format` | datetime   | Format/parse ISO date strings                         |
+| `read_file`       | filesystem | Read file under `FS_ROOT` (opt-in)                    |
+| `list_dir`        | filesystem | List directory under `FS_ROOT` (opt-in)               |
+| `search_files`    | filesystem | Search files by pattern under `FS_ROOT` (opt-in)      |
 
 ## Resources
 
-| URI | Content |
-|-----|---------|
-| `mcp://docs/build-plan` | Project build plan |
-| `mcp://docs/modules/{id}` | Per-module usage docs |
-| `mcp://config/schema` | JSON Schema of server config |
+| URI                       | Content                      |
+| ------------------------- | ---------------------------- |
+| `mcp://docs/build-plan`   | Project build plan           |
+| `mcp://docs/modules/{id}` | Per-module usage docs        |
+| `mcp://config/schema`     | JSON Schema of server config |
 
 ## Prompts
 
-| Prompt | Purpose |
-|--------|---------|
-| `explore_api` | Safely discover and call an unknown REST API |
-| `debug_tool_error` | Checklist when a tool call fails |
-| `design_new_module` | Guide for adding a new `McpModule` |
+| Prompt              | Purpose                                      |
+| ------------------- | -------------------------------------------- |
+| `explore_api`       | Safely discover and call an unknown REST API |
+| `debug_tool_error`  | Checklist when a tool call fails             |
+| `design_new_module` | Guide for adding a new `McpModule`           |
 
 ## Configuration
 
 Environment variables (see `.env.example`):
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
-| `MCP_HTTP_PORT` | `3100` | HTTP listen port |
-| `MCP_HTTP_HOST` | `127.0.0.1` | Bind address (`0.0.0.0` for Docker) |
-| `MCP_HTTP_PATH` | `/mcp` | Streamable HTTP endpoint |
-| `MCP_HTTP_ALLOWED_HOSTS` | `localhost,127.0.0.1,[::1]` | Host header allowlist (DNS rebinding protection) |
-| `MCP_CORS_ORIGINS` | _(empty)_ | Comma-separated CORS origins |
-| `MCP_AUTH_MODE` | `none` | `none`, `api_key`, or `bearer` (HTTP transport) |
-| `MCP_API_KEY` | _(empty)_ | Required when auth mode is `api_key` or `bearer` |
-| `MCP_MODULES` | `meta,http,json,datetime,docs` | Comma-separated module ids, or `*` for all (except filesystem) |
-| `READ_ONLY` | `false` | Skip mutating modules (e.g. http) |
-| `HTTP_TOOL_ALLOWED_HOSTS` | _(empty)_ | Comma-separated allowed hostnames (deny-all if empty) |
-| `HTTP_TOOL_MAX_RESPONSE_BYTES` | `1048576` | Max response size |
-| `HTTP_TOOL_TIMEOUT_MS` | `10000` | Request timeout |
-| `FS_ROOT` | _(empty)_ | Sandbox root for filesystem module |
-| `FS_MAX_READ_BYTES` | `1048576` | Max bytes read per file |
-| `LOG_LEVEL` | `info` | Log level (stderr only) |
+| Variable                       | Default                        | Description                                                    |
+| ------------------------------ | ------------------------------ | -------------------------------------------------------------- |
+| `MCP_TRANSPORT`                | `stdio`                        | `stdio` or `http`                                              |
+| `MCP_HTTP_PORT`                | `3100`                         | HTTP listen port                                               |
+| `MCP_HTTP_HOST`                | `127.0.0.1`                    | Bind address (`0.0.0.0` for Docker)                            |
+| `MCP_HTTP_PATH`                | `/mcp`                         | Streamable HTTP endpoint                                       |
+| `MCP_HTTP_ALLOWED_HOSTS`       | `localhost,127.0.0.1,[::1]`    | Host header allowlist (DNS rebinding protection)               |
+| `MCP_CORS_ORIGINS`             | _(empty)_                      | Comma-separated CORS origins                                   |
+| `MCP_AUTH_MODE`                | `none`                         | `none`, `api_key`, or `bearer` (HTTP transport)                |
+| `MCP_API_KEY`                  | _(empty)_                      | Required when auth mode is `api_key` or `bearer`               |
+| `MCP_MODULES`                  | `meta,http,json,datetime,docs` | Comma-separated module ids, or `*` for all (except filesystem) |
+| `READ_ONLY`                    | `false`                        | Skip mutating modules (e.g. http)                              |
+| `HTTP_TOOL_ALLOWED_HOSTS`      | _(empty)_                      | Comma-separated allowed hostnames (deny-all if empty)          |
+| `HTTP_TOOL_MAX_RESPONSE_BYTES` | `1048576`                      | Max response size                                              |
+| `HTTP_TOOL_TIMEOUT_MS`         | `10000`                        | Request timeout                                                |
+| `FS_ROOT`                      | _(empty)_                      | Sandbox root for filesystem module                             |
+| `FS_MAX_READ_BYTES`            | `1048576`                      | Max bytes read per file                                        |
+| `LOG_LEVEL`                    | `info`                         | Log level (stderr only)                                        |
 
 CLI flags override env:
 
@@ -159,6 +159,8 @@ pnpm test       # unit + integration tests
 pnpm inspect    # MCP Inspector against stdio
 pnpm docker:build
 pnpm lint       # ESLint (no console.log in src/)
+pnpm format        # format with oxfmt
+pnpm format:check  # check formatting (CI)
 ```
 
 ## npm

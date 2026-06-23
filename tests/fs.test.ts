@@ -28,9 +28,7 @@ describe("resolveSafePath", () => {
 
   it("blocks absolute paths outside root", () => {
     tempDir = path.join(os.tmpdir(), "mcp-fs-static");
-    expect(() => resolveSafePathSync(tempDir, "/etc/passwd")).toThrow(
-      "Path traversal denied",
-    );
+    expect(() => resolveSafePathSync(tempDir, "/etc/passwd")).toThrow("Path traversal denied");
   });
 });
 

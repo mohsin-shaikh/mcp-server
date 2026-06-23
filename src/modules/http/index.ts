@@ -1,9 +1,6 @@
 import { z } from "zod";
 import type { McpModule } from "../../registry/types.js";
-import {
-  formatTimeoutError,
-  formatUpstreamError,
-} from "../../lib/errors.js";
+import { formatTimeoutError, formatUpstreamError } from "../../lib/errors.js";
 import { truncate } from "../../lib/format.js";
 import { toolError, toolText } from "../../lib/result.js";
 import { wrapToolHandler } from "../../lib/tool.js";

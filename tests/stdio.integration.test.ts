@@ -1,10 +1,7 @@
 import { spawn } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
-function sendMessage(
-  child: ReturnType<typeof spawn>,
-  message: Record<string, unknown>,
-): void {
+function sendMessage(child: ReturnType<typeof spawn>, message: Record<string, unknown>): void {
   child.stdin?.write(`${JSON.stringify(message)}\n`);
 }
 
@@ -95,9 +92,9 @@ describe("stdio integration", () => {
       await initialize(child);
 
       const tools = await rpc(child, 2, "tools/list");
-      const toolNames = (
-        (tools["result"] as { tools: Array<{ name: string }> }).tools ?? []
-      ).map((tool) => tool.name);
+      const toolNames = ((tools["result"] as { tools: Array<{ name: string }> }).tools ?? []).map(
+        (tool) => tool.name,
+      );
 
       expect(toolNames).toContain("server_info");
       expect(toolNames).toContain("json_parse");
@@ -136,8 +133,7 @@ describe("stdio integration", () => {
 
       const resources = await rpc(child, 2, "resources/list");
       const uris = (
-        (resources["result"] as { resources: Array<{ uri: string }> })
-          .resources ?? []
+        (resources["result"] as { resources: Array<{ uri: string }> }).resources ?? []
       ).map((resource) => resource.uri);
 
       expect(uris.some((uri) => uri.includes("build-plan"))).toBe(true);
@@ -145,8 +141,7 @@ describe("stdio integration", () => {
 
       const prompts = await rpc(child, 3, "prompts/list");
       const promptNames = (
-        (prompts["result"] as { prompts: Array<{ name: string }> }).prompts ??
-        []
+        (prompts["result"] as { prompts: Array<{ name: string }> }).prompts ?? []
       ).map((prompt) => prompt.name);
 
       expect(promptNames).toContain("explore_api");

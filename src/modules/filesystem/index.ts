@@ -31,15 +31,8 @@ async function listEntries(
   return result;
 }
 
-async function searchFiles(
-  dirPath: string,
-  pattern: string,
-  fsRoot: string,
-): Promise<string[]> {
-  const regex = new RegExp(
-    pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*"),
-    "i",
-  );
+async function searchFiles(dirPath: string, pattern: string, fsRoot: string): Promise<string[]> {
+  const regex = new RegExp(pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*"), "i");
   const matches: string[] = [];
   const entries = await listEntries(dirPath, true);
 
@@ -126,8 +119,7 @@ export const filesystemModule: McpModule = {
       "search_files",
       {
         title: "Search files",
-        description:
-          "Find files by glob-like name pattern under FS_ROOT (e.g. *.ts, test_*).",
+        description: "Find files by glob-like name pattern under FS_ROOT (e.g. *.ts, test_*).",
         inputSchema: z.object({
           pattern: z.string().describe("Filename pattern (* and ? supported as wildcards)"),
           path: z.string().default(".").describe("Directory to search under FS_ROOT"),

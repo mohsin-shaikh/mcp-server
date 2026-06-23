@@ -18,12 +18,8 @@ describe("transport auth", () => {
       authMode: "api_key",
       apiKey: "secret-key",
     });
-    expect(
-      validateApiKeyHeader(config, { "x-api-key": "secret-key" }),
-    ).toBe(true);
-    expect(
-      validateApiKeyHeader(config, { "x-api-key": "wrong" }),
-    ).toBe(false);
+    expect(validateApiKeyHeader(config, { "x-api-key": "secret-key" })).toBe(true);
+    expect(validateApiKeyHeader(config, { "x-api-key": "wrong" })).toBe(false);
   });
 
   it("validates bearer token", () => {

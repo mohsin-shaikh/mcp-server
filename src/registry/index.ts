@@ -31,10 +31,7 @@ export async function registerModules(
       continue;
     }
 
-    ctx.logger.info(
-      { moduleId: mod.id, requestId: ctx.requestId },
-      "Registering module",
-    );
+    ctx.logger.info({ moduleId: mod.id, requestId: ctx.requestId }, "Registering module");
     await mod.register(server, ctx);
     registered.push(mod.id);
   }

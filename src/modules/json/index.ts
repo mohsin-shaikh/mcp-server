@@ -81,10 +81,7 @@ export const jsonModule: McpModule = {
           "Extract values from JSON using dot/bracket paths (e.g. user.name, items[0].id).",
         inputSchema: z.object({
           value: jsonValueSchema.describe("JSON value to query"),
-          paths: z
-            .array(z.string())
-            .min(1)
-            .describe("Paths to extract"),
+          paths: z.array(z.string()).min(1).describe("Paths to extract"),
         }),
         annotations: { readOnlyHint: true },
       },

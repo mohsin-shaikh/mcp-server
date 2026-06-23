@@ -40,10 +40,7 @@ export async function main(): Promise<void> {
 
   const { server, moduleIds } = await createMcpServer(ctx);
 
-  logger.info(
-    { requestId: ctx.requestId, moduleIds },
-    "Modules registered",
-  );
+  logger.info({ requestId: ctx.requestId, moduleIds }, "Modules registered");
 
   let closeTransport: (() => Promise<void>) | undefined;
 
@@ -73,9 +70,7 @@ export async function main(): Promise<void> {
   process.on("SIGTERM", () => onSignal("SIGTERM"));
 }
 
-const isDirectRun =
-  process.argv[1]?.includes("index.ts") ||
-  process.argv[1]?.includes("index.js");
+const isDirectRun = process.argv[1]?.includes("index.ts") || process.argv[1]?.includes("index.js");
 
 if (isDirectRun) {
   main().catch((err: unknown) => {

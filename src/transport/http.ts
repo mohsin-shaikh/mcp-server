@@ -91,9 +91,7 @@ export async function startHttpTransport(
 
   const app = createMcpHonoApp({
     host: config.httpBindHost,
-    ...(config.httpHostAllowlist.length > 0
-      ? { allowedHosts: config.httpHostAllowlist }
-      : {}),
+    ...(config.httpHostAllowlist.length > 0 ? { allowedHosts: config.httpHostAllowlist } : {}),
   });
 
   if (config.corsOrigins.length > 0) {
@@ -101,11 +99,7 @@ export async function startHttpTransport(
       "*",
       cors({
         origin: config.corsOrigins,
-        exposeHeaders: [
-          "Mcp-Session-Id",
-          "Last-Event-Id",
-          "Mcp-Protocol-Version",
-        ],
+        exposeHeaders: ["Mcp-Session-Id", "Last-Event-Id", "Mcp-Protocol-Version"],
       }),
     );
   }
@@ -189,9 +183,7 @@ export async function startHttpTransport(
     logger.info({ requestId: ctx.requestId }, "Shutting down HTTP transport");
 
     const sessionIds = [...sessions.keys()];
-    await Promise.all(
-      sessionIds.map((sessionId) => closeSession(sessions, sessionId, logger)),
-    );
+    await Promise.all(sessionIds.map((sessionId) => closeSession(sessions, sessionId, logger)));
 
     await new Promise<void>((resolve, reject) => {
       if (!httpServer) {

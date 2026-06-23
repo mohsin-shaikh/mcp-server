@@ -13,8 +13,7 @@ export const metaModule: McpModule = {
       "server_info",
       {
         title: "Server info",
-        description:
-          "Returns server name, version, enabled modules, and config summary.",
+        description: "Returns server name, version, enabled modules, and config summary.",
         inputSchema: z.object({}),
         annotations: {
           readOnlyHint: true,

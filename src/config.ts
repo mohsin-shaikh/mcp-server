@@ -56,14 +56,7 @@ function parseModules(value: string | undefined): string[] {
 }
 
 function parseLogLevel(value: string | undefined): LogLevel {
-  const allowed: LogLevel[] = [
-    "fatal",
-    "error",
-    "warn",
-    "info",
-    "debug",
-    "trace",
-  ];
+  const allowed: LogLevel[] = ["fatal", "error", "warn", "info", "debug", "trace"];
   if (value && allowed.includes(value as LogLevel)) {
     return value as LogLevel;
   }
@@ -142,10 +135,7 @@ export function parseCliArgs(argv: string[]): Partial<ServerConfig> {
   return overrides;
 }
 
-export function mergeConfig(
-  base: ServerConfig,
-  overrides: Partial<ServerConfig>,
-): ServerConfig {
+export function mergeConfig(base: ServerConfig, overrides: Partial<ServerConfig>): ServerConfig {
   return { ...base, ...overrides };
 }
 

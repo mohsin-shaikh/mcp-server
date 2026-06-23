@@ -25,15 +25,15 @@ Build a production-quality MCP server **framework** that:
 
 ### Success criteria
 
-| Criterion | Target |
-|-----------|--------|
-| Local dev | `pnpm dev` starts stdio server; Cursor connects in under 5 minutes |
-| Extensibility | New tool module added in &lt; 30 lines using shared registration helper |
-| Built-in tools (MVP) | At least 3 generic tools (e.g. HTTP fetch, JSON transform, time/UUID) |
-| Auth | Pluggable auth layer; secrets from env only |
-| Safety | Destructive tools opt-in via config; read-only mode supported |
-| Observability | Structured logs on stderr, request/tool call IDs |
-| Tests | Unit tests for registry + handlers; MCP Inspector smoke test |
+| Criterion            | Target                                                                  |
+| -------------------- | ----------------------------------------------------------------------- |
+| Local dev            | `pnpm dev` starts stdio server; Cursor connects in under 5 minutes      |
+| Extensibility        | New tool module added in &lt; 30 lines using shared registration helper |
+| Built-in tools (MVP) | At least 3 generic tools (e.g. HTTP fetch, JSON transform, time/UUID)   |
+| Auth                 | Pluggable auth layer; secrets from env only                             |
+| Safety               | Destructive tools opt-in via config; read-only mode supported           |
+| Observability        | Structured logs on stderr, request/tool call IDs                        |
+| Tests                | Unit tests for registry + handlers; MCP Inspector smoke test            |
 
 ---
 
@@ -111,28 +111,28 @@ flowchart LR
 
 ### Transport strategy
 
-| Transport | Use case | Notes |
-|-----------|----------|-------|
-| **stdio** | Local dev, Cursor, Claude Desktop | Primary for Phase 1 |
-| **Streamable HTTP** | Remote/hosted deployment | Phase 3; use `@modelcontextprotocol/hono` with DNS rebinding protection |
-| ~~SSE~~ | — | Deprecated; do not implement |
+| Transport           | Use case                          | Notes                                                                   |
+| ------------------- | --------------------------------- | ----------------------------------------------------------------------- |
+| **stdio**           | Local dev, Cursor, Claude Desktop | Primary for Phase 1                                                     |
+| **Streamable HTTP** | Remote/hosted deployment          | Phase 3; use `@modelcontextprotocol/hono` with DNS rebinding protection |
+| ~~SSE~~             | —                                 | Deprecated; do not implement                                            |
 
 ---
 
 ## 4. Tech stack
 
-| Layer | Choice | Rationale |
-|-------|--------|-----------|
-| Runtime | Node.js 22+ | Official MCP SDK support; wide deployment |
-| Language | TypeScript (strict) | Type-safe tool schemas and module API |
-| MCP SDK | `@modelcontextprotocol/server` v1.x | Production-stable; upgrade to v2 when GA |
-| Validation | Zod | Required peer dep of MCP SDK |
-| HTTP (remote) | Hono | Lightweight; official MCP middleware available |
-| HTTP client | `fetch` (native) | For built-in HTTP tool and backend integrations |
-| Logging | `pino` | Structured JSON; stderr-only in stdio mode |
-| Package manager | pnpm | Fast, strict dependency resolution |
-| Testing | Vitest | Unit + integration tests |
-| Build | tsup | ESM output, bin entry, declaration files |
+| Layer           | Choice                              | Rationale                                       |
+| --------------- | ----------------------------------- | ----------------------------------------------- |
+| Runtime         | Node.js 22+                         | Official MCP SDK support; wide deployment       |
+| Language        | TypeScript (strict)                 | Type-safe tool schemas and module API           |
+| MCP SDK         | `@modelcontextprotocol/server` v1.x | Production-stable; upgrade to v2 when GA        |
+| Validation      | Zod                                 | Required peer dep of MCP SDK                    |
+| HTTP (remote)   | Hono                                | Lightweight; official MCP middleware available  |
+| HTTP client     | `fetch` (native)                    | For built-in HTTP tool and backend integrations |
+| Logging         | `pino`                              | Structured JSON; stderr-only in stdio mode      |
+| Package manager | pnpm                                | Fast, strict dependency resolution              |
+| Testing         | Vitest                              | Unit + integration tests                        |
+| Build           | tsup                                | ESM output, bin entry, declaration files        |
 
 ---
 
@@ -210,11 +210,7 @@ export interface McpModule {
 
 ```typescript
 // src/registry/index.ts
-export async function registerModules(
-  server: McpServer,
-  ctx: ServerContext,
-  moduleIds: string[],
-) {
+export async function registerModules(server: McpServer, ctx: ServerContext, moduleIds: string[]) {
   const modules = resolveModules(moduleIds);
   for (const mod of modules) {
     if (ctx.config.readOnly && mod.readOnly === false) continue;
@@ -283,42 +279,42 @@ mcp-server --transport http --port 3100 --auth api_key
 
 Generic tools with no domain coupling:
 
-| Tool | Module | Description | Read-only |
-|------|--------|-------------|-----------|
-| `server_info` | meta | Name, version, enabled modules, config summary | yes |
-| `http_fetch` | http | GET/POST/PUT/PATCH/DELETE with headers, body, timeout | configurable |
-| `json_parse` | json | Parse JSON string; return structured result or error | yes |
-| `json_stringify` | json | Serialize object to formatted JSON | yes |
-| `json_pick` | json | Extract paths from JSON (lodash-style or JSONPath subset) | yes |
-| `datetime_now` | datetime | Current time in ISO 860_code and optional timezone | yes |
-| `datetime_format` | datetime | Format/parsedate strings | yes |
+| Tool              | Module   | Description                                               | Read-only    |
+| ----------------- | -------- | --------------------------------------------------------- | ------------ |
+| `server_info`     | meta     | Name, version, enabled modules, config summary            | yes          |
+| `http_fetch`      | http     | GET/POST/PUT/PATCH/DELETE with headers, body, timeout     | configurable |
+| `json_parse`      | json     | Parse JSON string; return structured result or error      | yes          |
+| `json_stringify`  | json     | Serialize object to formatted JSON                        | yes          |
+| `json_pick`       | json     | Extract paths from JSON (lodash-style or JSONPath subset) | yes          |
+| `datetime_now`    | datetime | Current time in ISO 860_code and optional timezone        | yes          |
+| `datetime_format` | datetime | Format/parsedate strings                                  | yes          |
 
 #### Phase 2 — Additional built-in modules (still generic)
 
-| Module | Example tools | Notes |
-|--------|---------------|-------|
-| `filesystem` | `read_file`, `list_dir`, `search_files` | Sandboxed to `FS_ROOT` env path |
-| `shell` | `run_command` | Opt-in; allowlist commands; never default-on |
-| `cache` | `cache_get`, `cache_set` | In-memory TTL cache for expensive upstream calls |
-| `openapi` | `openapi_call` | Call any REST API from an OpenAPI spec URL | 
+| Module       | Example tools                           | Notes                                            |
+| ------------ | --------------------------------------- | ------------------------------------------------ |
+| `filesystem` | `read_file`, `list_dir`, `search_files` | Sandboxed to `FS_ROOT` env path                  |
+| `shell`      | `run_command`                           | Opt-in; allowlist commands; never default-on     |
+| `cache`      | `cache_get`, `cache_set`                | In-memory TTL cache for expensive upstream calls |
+| `openapi`    | `openapi_call`                          | Call any REST API from an OpenAPI spec URL       |
 
 ### 8.2 Resources (Phase 2)
 
-| URI pattern | Content |
-|-------------|---------|
-| `mcp://docs/build-plan` | This build plan (embedded or read from disk) |
-| `mcp://docs/modules/{id}` | Per-module usage docs |
-| `mcp://config/schema` | JSON Schema of server config (for agents) |
+| URI pattern               | Content                                      |
+| ------------------------- | -------------------------------------------- |
+| `mcp://docs/build-plan`   | This build plan (embedded or read from disk) |
+| `mcp://docs/modules/{id}` | Per-module usage docs                        |
+| `mcp://config/schema`     | JSON Schema of server config (for agents)    |
 
 Resources are static or templated — no arbitrary filesystem exposure unless `filesystem` module is enabled.
 
 ### 8.3 Prompts (Phase 2)
 
-| Prompt | Purpose |
-|--------|---------|
-| `explore_api` | Template for discovering and calling an unknown REST API safely |
-| `debug_tool_error` | Structured checklist when a tool call fails |
-| `design_new_module` | Guide for adding a new `McpModule` to the server |
+| Prompt              | Purpose                                                         |
+| ------------------- | --------------------------------------------------------------- |
+| `explore_api`       | Template for discovering and calling an unknown REST API safely |
+| `debug_tool_error`  | Structured checklist when a tool call fails                     |
+| `design_new_module` | Guide for adding a new `McpModule` to the server                |
 
 ### 8.4 Server instructions
 
@@ -393,10 +389,10 @@ export const httpModule: McpModule = {
 
 Auth applies at two layers:
 
-| Layer | When | Options |
-|-------|------|---------|
-| **Transport auth** | Streamable HTTP only | None, API key header, Bearer JWT |
-| **Tool auth** | Per-module | Module reads credentials from `ctx.secrets` (env-backed) |
+| Layer              | When                 | Options                                                  |
+| ------------------ | -------------------- | -------------------------------------------------------- |
+| **Transport auth** | Streamable HTTP only | None, API key header, Bearer JWT                         |
+| **Tool auth**      | Per-module           | Module reads credentials from `ctx.secrets` (env-backed) |
 
 Rules:
 
@@ -410,15 +406,15 @@ For stdio (local spawn), transport auth is typically `none` — the OS user boun
 
 ## 11. Error handling
 
-| Situation | MCP response |
-|-----------|--------------|
-| Zod validation failure | Field-level message from schema |
-| Upstream 401/403 | "Authentication failed for upstream service" |
-| Upstream 404 | "Resource not found: {url or id}" |
-| Upstream 429 | "Rate limited; retry later" |
-| Timeout | "Request timed out after {N}ms" |
-| Disallowed host | "Host not in allowlist" |
-| Read-only violation | "Tool disabled in READ_ONLY mode" |
+| Situation              | MCP response                                 |
+| ---------------------- | -------------------------------------------- |
+| Zod validation failure | Field-level message from schema              |
+| Upstream 401/403       | "Authentication failed for upstream service" |
+| Upstream 404           | "Resource not found: {url or id}"            |
+| Upstream 429           | "Rate limited; retry later"                  |
+| Timeout                | "Request timed out after {N}ms"              |
+| Disallowed host        | "Host not in allowlist"                      |
+| Read-only violation    | "Tool disabled in READ_ONLY mode"            |
 
 Never return stack traces, env var values, or internal file paths.
 
@@ -497,13 +493,13 @@ Published package:
 
 ## 14. Testing strategy
 
-| Layer | What | How |
-|-------|------|-----|
-| Unit | Schema validation, redaction, truncation, allowlist | Vitest |
-| Unit | Module registration, read-only gating | Vitest + mock McpServer |
-| Integration | stdio handshake + `tools/list` | Spawn process in test |
-| Manual | Full tool calls | MCP Inspector |
-| Contract | Snapshot of tool names/schemas | Vitest snapshot on `listTools` |
+| Layer       | What                                                | How                            |
+| ----------- | --------------------------------------------------- | ------------------------------ |
+| Unit        | Schema validation, redaction, truncation, allowlist | Vitest                         |
+| Unit        | Module registration, read-only gating               | Vitest + mock McpServer        |
+| Integration | stdio handshake + `tools/list`                      | Spawn process in test          |
+| Manual      | Full tool calls                                     | MCP Inspector                  |
+| Contract    | Snapshot of tool names/schemas                      | Vitest snapshot on `listTools` |
 
 ---
 
@@ -563,25 +559,25 @@ This keeps the general-purpose core stable while domain logic stays isolated and
 
 ## 17. Open questions
 
-| # | Question | Notes |
-|---|----------|-------|
-| 1 | Publish as `@zuupee/mcp-server` or neutral scope? | Naming only; no product coupling in code |
-| 2 | Include `filesystem` in MVP or Phase 2? | Security review first |
-| 3 | Support dynamic plugins via npm install, or local path only? | Phase 4 decision |
-| 4 | OpenAPI module: runtime spec fetch vs codegen tools? | Tradeoff: flexibility vs type safety |
-| 5 | Multi-tenant HTTP deployment? | Session-per-client vs stateless |
+| #   | Question                                                     | Notes                                    |
+| --- | ------------------------------------------------------------ | ---------------------------------------- |
+| 1   | Publish as `@zuupee/mcp-server` or neutral scope?            | Naming only; no product coupling in code |
+| 2   | Include `filesystem` in MVP or Phase 2?                      | Security review first                    |
+| 3   | Support dynamic plugins via npm install, or local path only? | Phase 4 decision                         |
+| 4   | OpenAPI module: runtime spec fetch vs codegen tools?         | Tradeoff: flexibility vs type safety     |
+| 5   | Multi-tenant HTTP deployment?                                | Session-per-client vs stateless          |
 
 ---
 
 ## 18. Risks & mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| HTTP tool used for SSRF | Internal network exposure | Deny-by-default host allowlist |
-| Filesystem module path traversal | Data leak | Resolve paths under `FS_ROOT`; block `..` |
-| stdio log noise | Client disconnects | Lint + pino to stderr only |
-| Tool sprawl confuses models | Poor agent performance | Modular enablement; clear server instructions |
-| Module API churn | Broken plugins | Semver; keep `McpModule` interface minimal |
+| Risk                             | Impact                    | Mitigation                                    |
+| -------------------------------- | ------------------------- | --------------------------------------------- |
+| HTTP tool used for SSRF          | Internal network exposure | Deny-by-default host allowlist                |
+| Filesystem module path traversal | Data leak                 | Resolve paths under `FS_ROOT`; block `..`     |
+| stdio log noise                  | Client disconnects        | Lint + pino to stderr only                    |
+| Tool sprawl confuses models      | Poor agent performance    | Modular enablement; clear server instructions |
+| Module API churn                 | Broken plugins            | Semver; keep `McpModule` interface minimal    |
 
 ---
 
@@ -616,10 +612,9 @@ export const acmeModule: McpModule = {
       },
       async ({ limit }) => {
         const apiKey = ctx.secrets.require("ACME_API_KEY");
-        const res = await ctx.http.fetch(
-          `https://api.acme.example/items?limit=${limit}`,
-          { headers: { Authorization: `Bearer ${apiKey}` } },
-        );
+        const res = await ctx.http.fetch(`https://api.acme.example/items?limit=${limit}`, {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        });
         // ... handle response
       },
     );

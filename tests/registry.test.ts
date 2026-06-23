@@ -47,12 +47,6 @@ describe("registry", () => {
 
   it("resolves wildcard modules without filesystem", () => {
     const modules = resolveModules(["*"]);
-    expect(modules.map((m) => m.id)).toEqual([
-      "meta",
-      "http",
-      "json",
-      "datetime",
-      "docs",
-    ]);
+    expect(modules.map((m) => m.id)).toEqual(["meta", "http", "json", "datetime", "docs"]);
   });
 });
