@@ -191,12 +191,12 @@ Parse on `callTool` to route to the correct MCP connection.
 
 #### MVP scope
 
-- [ ] Stdio + Streamable HTTP transports
-- [ ] API key header for HTTP (`X-API-Key`, aligned with `mcp-server`)
-- [ ] `connect`, `listTools`, `callTool`, `listResources`, `readResource`, `close`
-- [ ] Multi-server config (JSON or env)
-- [ ] Tool result truncation helper (max bytes → string for LLM context)
-- [ ] Integration tests against local `mcp-server` (stdio + http)
+- [x] Stdio + Streamable HTTP transports
+- [x] API key header for HTTP (`X-API-Key`, aligned with `mcp-server`)
+- [x] `connect`, `listTools`, `callTool`, `listResources`, `readResource`, `close`
+- [x] Multi-server config (JSON or env)
+- [x] Tool result truncation helper (max bytes → string for LLM context)
+- [x] Integration tests against local `mcp-server` (stdio + http)
 
 #### Deferred (post-MVP)
 
@@ -449,10 +449,10 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ### Phase 0 — Monorepo bootstrap (1–2 days)
 
-- [ ] Add `pnpm-workspace.yaml` including `mcp-server`, `mcp-client`, `chat-orchestrator`, `chat-api`
-- [ ] Shared TS config, ESLint, Node 22+
-- [ ] Root scripts: `pnpm dev:chat`, `pnpm test`, `pnpm build`
-- [ ] `.env.example` at root for LLM keys, MCP URLs, CORS origin
+- [x] Add `pnpm-workspace.yaml` including `mcp-server`, `mcp-client`, `chat-orchestrator`, `chat-api`
+- [x] Shared TS config, ESLint, Node 22+
+- [x] Root scripts: `pnpm dev:chat`, `pnpm test`, `pnpm build`
+- [x] `.env.example` at root for LLM keys, MCP URLs, CORS origin
 
 **Exit:** `pnpm install` works; empty packages typecheck.
 
@@ -460,12 +460,12 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ### Phase 1 — `mcp-client` MVP (1–2 weeks)
 
-- [ ] Scaffold `mcp-client` package (`tsup`, `vitest`)
-- [ ] Implement `McpConnectionManager` (stdio + HTTP)
-- [ ] Implement `McpToolRegistry` with namespacing
-- [ ] Implement `toOpenAITools` (or Anthropic first, matching orchestrator choice)
-- [ ] Integration tests: connect to `mcp-server`, `callTool("core__server_info")`
-- [ ] Document config schema in package README
+- [x] Scaffold `mcp-client` package (`tsup`, `vitest`)
+- [x] Implement `McpConnectionManager` (stdio + HTTP)
+- [x] Implement `McpToolRegistry` with namespacing
+- [x] Implement `toOpenAITools` (or Anthropic first, matching orchestrator choice)
+- [x] Integration tests: connect to `mcp-server`, `callTool("core__server_info")`
+- [x] Document config schema in package README
 
 **Exit:** CLI smoke script lists tools from running server.
 
@@ -473,10 +473,10 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ### Phase 2 — Domain MCP plugin (3–5 days)
 
-- [ ] Scaffold one domain plugin (e.g. `orders` or `docs`) on `mcp-server`
-- [ ] Wire to your staging API with `HTTP_TOOL_ALLOWED_HOSTS` or dedicated client in plugin
-- [ ] Add read-only tools first; one mutating tool behind `READ_ONLY` check
-- [ ] Test via MCP Inspector and `mcp-client` integration test
+- [x] Scaffold one domain plugin (e.g. `orders` or `docs`) on `mcp-server`
+- [x] Wire to your staging API with `HTTP_TOOL_ALLOWED_HOSTS` or dedicated client in plugin
+- [x] Add read-only tools first; one mutating tool behind `READ_ONLY` check
+- [x] Test via MCP Inspector and `mcp-client` integration test
 
 **Exit:** `orders__get_order` returns real data from staging API.
 

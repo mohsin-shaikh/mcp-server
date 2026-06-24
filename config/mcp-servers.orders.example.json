@@ -1,0 +1,17 @@
+{
+  "servers": [
+    {
+      "id": "orders",
+      "transport": "stdio",
+      "command": "node",
+      "args": ["../mcp-server/dist/index.js"],
+      "env": {
+        "MCP_MODULES": "meta,orders",
+        "READ_ONLY": "false",
+        "ORDERS_API_BASE_URL": "https://orders.staging.example.com",
+        "ORDERS_API_ALLOWED_HOSTS": "orders.staging.example.com",
+        "LOG_LEVEL": "info"
+      }
+    }
+  ]
+}

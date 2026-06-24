@@ -11,6 +11,8 @@ Monorepo for Zuupee's [Model Context Protocol (MCP)](https://modelcontextprotoco
 | [`chat-orchestrator`](./chat-orchestrator/) | Scaffold | Custom ReAct agent loop (Phase 3) |
 | [`chat-api`](./chat-api/) | Scaffold | HTTP API + SSE for the website chatbot (Phase 4) |
 
+Domain plugins live under [`mcp-server/plugins/`](./mcp-server/plugins/) — see the `orders` plugin for a reference integration.
+
 See [docs/chatbot-implementation-plan.md](./docs/chatbot-implementation-plan.md) for the full build plan.
 
 ## Getting started
