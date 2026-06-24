@@ -63,7 +63,7 @@ pnpm dev:orchestrator -- "What is the status of order ord_123?"
 pnpm dev:chat
 ```
 
-Copy `.env.example` to `.env` and set `OPENAI_API_KEY` for orchestrator demos.
+Copy `.env.example` to `.env.local` at the repo root and set `OPENAI_API_KEY` for orchestrator demos.
 
 ## Repository layout
 

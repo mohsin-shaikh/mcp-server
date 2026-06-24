@@ -55,10 +55,7 @@ export class ChatOrchestrator {
       await this.registry.refresh();
 
       const basePrompt = this.config.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
-      const systemPrompt = buildSystemPrompt(
-        basePrompt,
-        this.registry.getServerInstructions(),
-      );
+      const systemPrompt = buildSystemPrompt(basePrompt, this.registry.getServerInstructions());
 
       const tools = filterTools(this.registry.listTools(), {
         toolAllowlist: this.config.toolAllowlist,
@@ -165,20 +162,14 @@ export class ChatOrchestrator {
   }
 }
 
-export function loadOrchestratorConfigFromEnv(
-  mcpServers: McpServerConfig[],
-): OrchestratorConfig {
+export function loadOrchestratorConfigFromEnv(mcpServers: McpServerConfig[]): OrchestratorConfig {
   const provider = process.env["LLM_PROVIDER"] === "anthropic" ? "anthropic" : "openai";
   const apiKey =
-    provider === "openai"
-      ? process.env["OPENAI_API_KEY"]
-      : process.env["ANTHROPIC_API_KEY"];
+    provider === "openai" ? process.env["OPENAI_API_KEY"] : process.env["ANTHROPIC_API_KEY"];
 
   if (!apiKey) {
     throw new Error(
-      provider === "openai"
-        ? "OPENAI_API_KEY is required"
-        : "ANTHROPIC_API_KEY is required",
+      provider === "openai" ? "OPENAI_API_KEY is required" : "ANTHROPIC_API_KEY is required",
     );
   }
 
