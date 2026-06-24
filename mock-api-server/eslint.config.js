@@ -4,6 +4,6 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(eslint.configs.recommended, ...tseslint.configs.recommended, {
   files: ["src/**/*.ts"],
   rules: {
-    "no-console": "error",
+    "no-console": "off",
   },
 });

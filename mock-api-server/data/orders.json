@@ -1,0 +1,53 @@
+[
+  {
+    "id": "ord_123",
+    "userId": "user_42",
+    "status": "shipped",
+    "totalCents": 4999,
+    "currency": "USD",
+    "createdAt": "2026-06-01T10:00:00.000Z",
+    "updatedAt": "2026-06-02T14:30:00.000Z",
+    "items": [
+      {
+        "sku": "SKU-001",
+        "name": "Widget Pro",
+        "quantity": 1,
+        "priceCents": 4999
+      }
+    ]
+  },
+  {
+    "id": "ord_456",
+    "userId": "user_42",
+    "status": "processing",
+    "totalCents": 2599,
+    "currency": "USD",
+    "createdAt": "2026-06-10T08:15:00.000Z",
+    "updatedAt": "2026-06-10T08:15:00.000Z",
+    "items": [
+      {
+        "sku": "SKU-002",
+        "name": "Gadget Mini",
+        "quantity": 2,
+        "priceCents": 1299
+      }
+    ]
+  },
+  {
+    "id": "ord_789",
+    "userId": "user_99",
+    "status": "pending",
+    "totalCents": 1200,
+    "currency": "USD",
+    "createdAt": "2026-06-15T12:00:00.000Z",
+    "updatedAt": "2026-06-15T12:00:00.000Z",
+    "items": [
+      {
+        "sku": "SKU-003",
+        "name": "Starter Kit",
+        "quantity": 1,
+        "priceCents": 1200
+      }
+    ]
+  }
+]

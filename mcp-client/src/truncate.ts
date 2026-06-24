@@ -1,9 +1,6 @@
 const DEFAULT_MAX_BYTES = 32 * 1024;
 
-export function truncateToolResult(
-  content: string,
-  maxBytes: number = DEFAULT_MAX_BYTES,
-): string {
+export function truncateToolResult(content: string, maxBytes: number = DEFAULT_MAX_BYTES): string {
   const encoder = new TextEncoder();
   const bytes = encoder.encode(content);
 

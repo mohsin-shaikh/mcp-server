@@ -15,11 +15,7 @@ export async function loadMcpServersConfig(path: string): Promise<McpServerConfi
 export { toOpenAITools } from "./adapters/openai.js";
 export { McpConnectionManager } from "./connection-manager.js";
 export { formatCallToolResult } from "./format-result.js";
-export {
-  healthUrlFromMcpUrl,
-  namespaceTool,
-  parseNamespacedTool,
-} from "./namespace.js";
+export { healthUrlFromMcpUrl, namespaceTool, parseNamespacedTool } from "./namespace.js";
 export { McpToolRegistry } from "./tool-registry.js";
 export { truncateToolResult } from "./truncate.js";
 export type {

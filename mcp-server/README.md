@@ -192,8 +192,6 @@ pnpm docker:build
 pnpm metrics:up   # local Prometheus + Grafana stack
 pnpm create-module my-service
 pnpm lint       # ESLint (no console.log in src/)
-pnpm format        # format with oxfmt
-pnpm format:check  # check formatting (CI)
 ```
 
 ## npm
