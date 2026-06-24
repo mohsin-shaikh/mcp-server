@@ -1,9 +1,27 @@
+# Dependencies
 node_modules/
+
+# Build outputs
 dist/
+
+# Environment
 .env
 .env.local
+.env.*.local
+
+# Logs
 *.log
+
+# OS
 .DS_Store
+
+# Test coverage
 coverage/
-plugins/*
-!plugins/example/
+
+# IDE
+.idea/
+.vscode/
+
+# Package-specific (mcp-server plugins)
+mcp-server/plugins/*
+!mcp-server/plugins/example/
