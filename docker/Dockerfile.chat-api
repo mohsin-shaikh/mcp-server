@@ -1,0 +1,48 @@
+# syntax=docker/dockerfile:1
+
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+RUN corepack enable pnpm
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
+COPY mcp-client ./mcp-client
+COPY chat-orchestrator ./chat-orchestrator
+COPY chat-api ./chat-api
+COPY config ./config
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm -C mcp-client build && pnpm -C chat-orchestrator build && pnpm -C chat-api build
+
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+RUN corepack enable pnpm && apk add --no-cache wget
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY mcp-client/package.json ./mcp-client/
+COPY chat-orchestrator/package.json ./chat-orchestrator/
+COPY chat-api/package.json ./chat-api/
+
+RUN pnpm install --filter @zuupee/chat-api... --prod --frozen-lockfile
+
+COPY --from=builder /app/mcp-client/dist ./mcp-client/dist
+COPY --from=builder /app/chat-orchestrator/dist ./chat-orchestrator/dist
+COPY --from=builder /app/chat-api/dist ./chat-api/dist
+COPY --from=builder /app/config ./config
+
+WORKDIR /app/chat-api
+
+ENV NODE_ENV=production
+ENV CHAT_PORT=3200
+ENV MCP_SERVERS_CONFIG=/app/config/mcp-servers.docker.json
+ENV CHAT_CORS_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+
+EXPOSE 3200
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
+  CMD wget -q -O - "http://127.0.0.1:3200/health" || exit 1
+
+CMD ["node", "dist/index.js"]

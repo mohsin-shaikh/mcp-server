@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zuupee Chat Widget Dev</title>
+  </head>
+  <body>
+    <h1>Widget dev</h1>
+    <p>Use the chat button in the bottom-right corner.</p>
+    <script type="module">
+      import { mountWidget } from "/src/widget.ts";
+      mountWidget({
+        apiUrl: import.meta.env.VITE_CHAT_API_URL ?? "/api",
+        theme: "light",
+      });
+    </script>
+  </body>
+</html>

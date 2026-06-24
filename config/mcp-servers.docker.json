@@ -1,0 +1,14 @@
+{
+  "servers": [
+    {
+      "id": "core",
+      "transport": "http",
+      "url": "http://mcp-core:3100/mcp"
+    },
+    {
+      "id": "orders",
+      "transport": "http",
+      "url": "http://mcp-orders:3100/mcp"
+    }
+  ]
+}

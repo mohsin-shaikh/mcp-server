@@ -3,6 +3,7 @@ packages:
   - mcp-client
   - chat-orchestrator
   - chat-api
+  - chat-widget
   - mock-api-server
 allowBuilds:
   esbuild: true

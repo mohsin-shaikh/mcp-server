@@ -10,6 +10,7 @@ Monorepo for Zuupee's [Model Context Protocol (MCP)](https://modelcontextprotoco
 | [`mcp-client`](./mcp-client/)               | In progress | Multi-server MCP client with namespaced tools                                |
 | [`chat-orchestrator`](./chat-orchestrator/) | Available   | Custom ReAct agent loop with OpenAI + MCP tools                              |
 | [`chat-api`](./chat-api/)                   | Available   | HTTP API + SSE for the website chatbot                                       |
+| [`chat-widget`](./chat-widget/)             | Available   | Embeddable chat UI (Vite → single JS bundle)                                 |
 | [`mock-api-server`](./mock-api-server/)     | Available   | Local JSON orders API for dev and tests                                      |
 
 Domain plugins live under [`mcp-server/plugins/`](./mcp-server/plugins/) — see the `orders` plugin for a reference integration.
@@ -80,6 +81,44 @@ curl -N -X POST "http://127.0.0.1:3200/chat/sessions/$SESSION/messages" \
 
 Copy `.env.example` to `.env.local` at the repo root and set `OPENAI_API_KEY` for orchestrator demos.
 
+### Chat widget
+
+```bash
+# Terminal 1
+pnpm dev:mock-orders
+
+# Terminal 2
+pnpm dev:chat
+
+# Terminal 3
+pnpm dev:widget
+```
+
+Open http://localhost:5173 and use the chat button. The widget proxies API calls to `chat-api` via `/api` in dev.
+
+Embed on any site:
+
+```html
+<script
+  src="https://cdn.example.com/chat-widget.js"
+  data-api-url="https://chat.example.com"
+  data-theme="light"
+></script>
+```
+
+### Docker Compose demo
+
+Build the widget, set `OPENAI_API_KEY`, then:
+
+```bash
+pnpm -C chat-widget build
+pnpm docker:chat
+```
+
+Open http://localhost:8080 for the widget and http://localhost:3200/health for API status.
+
+See [docs/e2e-manual-checklist.md](./docs/e2e-manual-checklist.md) for the full E2E checklist.
+
 ## Repository layout
 
 ```
@@ -88,6 +127,7 @@ Copy `.env.example` to `.env.local` at the repo root and set `OPENAI_API_KEY` fo
 ├── mcp-client/          # @zuupee/mcp-client
 ├── chat-orchestrator/   # @zuupee/chat-orchestrator
 ├── chat-api/            # @zuupee/chat-api
+├── chat-widget/         # @zuupee/chat-widget
 ├── mock-api-server/     # @zuupee/mock-api-server
 ├── config/              # Shared MCP server config for local dev
 └── docs/
