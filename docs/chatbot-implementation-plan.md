@@ -349,12 +349,12 @@ Persist: `sessionId`, `messages[]`, `createdAt`, optional `userId`.
 
 #### MVP scope
 
-- [ ] Hono or Express (match `mcp-server` — **Hono** recommended)
-- [ ] SSE streaming from orchestrator events
-- [ ] CORS configured for your website origin
-- [ ] Rate limit middleware (e.g. 20 req/min per IP)
-- [ ] Structured logging (pino)
-- [ ] Graceful shutdown: close orchestrator → mcp-client
+- [x] Hono or Express (match `mcp-server` — **Hono** recommended)
+- [x] SSE streaming from orchestrator events
+- [x] CORS configured for your website origin
+- [x] Rate limit middleware (e.g. 20 req/min per IP)
+- [x] Structured logging (pino)
+- [x] Graceful shutdown: close orchestrator → mcp-client
 
 ---
 
@@ -503,11 +503,11 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ### Phase 4 — `chat-api` + SSE (1 week)
 
-- [ ] HTTP server with session CRUD
-- [ ] `POST .../messages` → SSE stream from orchestrator
-- [ ] CORS + rate limiting
-- [ ] Health endpoint includes MCP status
-- [ ] Integration test: supertest + mock LLM or recorded fixtures
+- [x] HTTP server with session CRUD
+- [x] `POST .../messages` → SSE stream from orchestrator
+- [x] CORS + rate limiting
+- [x] Health endpoint includes MCP status
+- [x] Integration test: supertest + mock LLM or recorded fixtures
 
 **Exit:** `curl` receives streamed SSE events for a message.
 
