@@ -6,7 +6,7 @@ WORKDIR /app
 
 RUN corepack enable pnpm
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY mock-api-server ./mock-api-server
 
 RUN pnpm install --filter @zuupee/mock-api-server --frozen-lockfile

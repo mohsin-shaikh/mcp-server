@@ -12,10 +12,10 @@ Use this checklist to verify the full browser → chat-api → orchestrator → 
 
 ### Steps
 
-1. **Start mock orders API**
+1. **Start mock API server**
 
    ```bash
-   pnpm dev:mock-orders
+   pnpm dev:mock-api-server
    ```
    - [ ] `curl http://127.0.0.1:3999/health` returns OK
 
@@ -75,11 +75,18 @@ Use this checklist to verify the full browser → chat-api → orchestrator → 
    - [ ] Ask about `ord_123` in the widget
    - [ ] Streamed reply references order data from mock API
 
+## Docker Compose notes
+
+- `chat-api` uses `config/mcp-servers.docker.json` (HTTP to `mcp-core` / `mcp-orders`), **not** `MCP_SERVERS_CONFIG` from `.env.local`
+- If you see `Connection closed` or `circuit open`, restart the stack: `docker compose -f docker-compose.chat.yml down && pnpm docker:chat`
+- Verify MCP health: `curl -s http://127.0.0.1:3200/health | jq`
+
 ## Failure triage
 
-| Symptom                          | Likely cause                                                |
-| -------------------------------- | ----------------------------------------------------------- |
-| CORS error in browser            | Add widget origin to `CHAT_CORS_ORIGINS`                    |
-| `Session not found` after reload | chat-api restarted (in-memory sessions); create new session |
-| Tool errors / empty reply        | mock-api or MCP servers not running                         |
-| `OPENAI_API_KEY is required`     | Missing key in `.env.local` or compose env                  |
+| Symptom                              | Likely cause                                                            |
+| ------------------------------------ | ----------------------------------------------------------------------- |
+| CORS error in browser                | Add widget origin to `CHAT_CORS_ORIGINS`                                |
+| `Session not found` after reload     | chat-api restarted (in-memory sessions); create new session             |
+| `Connection closed` / `circuit open` | Docker used stdio MCP config from `.env.local`; restart stack after fix |
+| Tool errors / empty reply            | mock-api or MCP servers not running                                     |
+| `OPENAI_API_KEY is required`         | Missing key in `.env.local` or compose env                              |

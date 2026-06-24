@@ -25,7 +25,7 @@ function warnIfOrdersMissing(
     `Warning: MCP config "${mcpConfigPath}" has no "orders" server — order tools are unavailable.`,
   );
   console.error(`Set MCP_SERVERS_CONFIG=./config/mcp-servers.chat.example.json in .env.local`);
-  console.error("And run `pnpm dev:mock-orders` in another terminal.\n");
+  console.error("And run `pnpm dev:mock-api-server` in another terminal.\n");
 }
 
 async function main(): Promise<void> {
@@ -45,7 +45,7 @@ async function main(): Promise<void> {
   if (verbose) {
     console.error(`MCP config: ${mcpConfigPath}`);
     console.error(`MCP servers: ${mcpServers.map((server) => server.id).join(", ")}`);
-    console.error("Ensure `pnpm dev:mock-orders` is running for orders tools.\n");
+    console.error("Ensure `pnpm dev:mock-api-server` is running for orders tools.\n");
   }
 
   warnIfOrdersMissing(

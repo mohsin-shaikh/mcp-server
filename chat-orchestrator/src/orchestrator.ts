@@ -4,7 +4,9 @@ import {
   toOpenAITools,
   type McpServerConfig,
 } from "@zuupee/mcp-client";
+import { hashToolArgs } from "./audit.js";
 import { parseToolArguments, toLlmMessages } from "./messages.js";
+import { withSpan } from "./tracing.js";
 import { buildSystemPrompt, DEFAULT_SYSTEM_PROMPT } from "./prompts.js";
 import { createLlmAdapter } from "./llm/openai.js";
 import type { ConnectionManagerLike, ToolRegistryLike } from "./registry.js";
@@ -16,6 +18,7 @@ import type {
   LlmToolCall,
   OrchestratorConfig,
   OrchestratorEvent,
+  OrchestratorRunOptions,
 } from "./types.js";
 
 const DEFAULT_MAX_TOOL_STEPS = 10;
@@ -49,7 +52,10 @@ export class ChatOrchestrator {
     this.registry = new McpToolRegistry(manager);
   }
 
-  async *run(messages: ChatMessage[]): AsyncIterable<OrchestratorEvent> {
+  async *run(
+    messages: ChatMessage[],
+    options?: OrchestratorRunOptions,
+  ): AsyncIterable<OrchestratorEvent> {
     try {
       await this.manager.connect();
       await this.registry.refresh();
@@ -95,15 +101,31 @@ export class ChatOrchestrator {
 
           let resultContent = "";
           let isError = false;
+          const startedAt = Date.now();
 
           try {
-            const result = await this.registry.callTool(toolCall.name, args);
+            const result = await withSpan(
+              "orchestrator.tool_call",
+              {
+                "chat.session_id": options?.sessionId ?? "",
+                "mcp.tool_name": toolCall.name,
+              },
+              () => this.registry.callTool(toolCall.name, args),
+            );
             resultContent = result.content;
             isError = result.isError;
           } catch (err) {
             resultContent = err instanceof Error ? err.message : "Tool call failed";
             isError = true;
           }
+
+          this.config.onToolAudit?.({
+            sessionId: options?.sessionId,
+            toolName: toolCall.name,
+            argsHash: hashToolArgs(args),
+            latencyMs: Date.now() - startedAt,
+            isError,
+          });
 
           yield {
             type: "tool_end",
@@ -139,7 +161,6 @@ export class ChatOrchestrator {
   }
 
   async getMcpHealth(): Promise<Record<string, "ok" | "error">> {
-    await this.manager.connect();
     return this.manager.healthCheck();
   }
 

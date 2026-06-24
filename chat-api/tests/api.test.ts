@@ -3,7 +3,7 @@ import type { ChatMessage, OrchestratorEvent } from "@zuupee/chat-orchestrator";
 import { createApp } from "../src/app.js";
 import { createLogger } from "../src/logger.js";
 import type { OrchestratorRunner } from "../src/orchestrator-service.js";
-import { SessionStore } from "../src/sessions.js";
+import { MemorySessionStore } from "../src/session-store/memory.js";
 
 function createMockOrchestrator(events: OrchestratorEvent[]): OrchestratorRunner {
   return {
@@ -22,6 +22,7 @@ const baseConfig = {
   corsOrigins: ["http://localhost:5173"],
   rateLimitRpm: 100,
   logLevel: "silent" as const,
+  sessionTtlSeconds: 86_400,
 };
 
 describe("chat-api", () => {
@@ -31,6 +32,7 @@ describe("chat-api", () => {
       orchestrator,
       logger: createLogger("silent"),
       config: baseConfig,
+      sessionStore: new MemorySessionStore(),
     });
 
     const res = await app.request("/health");
@@ -40,6 +42,7 @@ describe("chat-api", () => {
     expect(body).toEqual({
       status: "ok",
       mcp: { core: "ok", orders: "ok" },
+      sessionStore: "memory",
     });
   });
 
@@ -48,6 +51,7 @@ describe("chat-api", () => {
       orchestrator: createMockOrchestrator([]),
       logger: createLogger("silent"),
       config: baseConfig,
+      sessionStore: new MemorySessionStore(),
     });
 
     const res = await app.request("/chat/sessions", { method: "POST" });
@@ -64,7 +68,7 @@ describe("chat-api", () => {
       { type: "text_delta", delta: "Hello" },
       { type: "done", message: "Hello" },
     ]);
-    const sessions = new SessionStore();
+    const sessions = new MemorySessionStore();
     const app = createApp({
       orchestrator,
       logger: createLogger("silent"),
@@ -103,6 +107,7 @@ describe("chat-api", () => {
       orchestrator: createMockOrchestrator([]),
       logger: createLogger("silent"),
       config: { ...baseConfig, apiKey: "secret-key" },
+      sessionStore: new MemorySessionStore(),
     });
 
     const res = await app.request("/chat/sessions", { method: "POST" });
@@ -114,6 +119,7 @@ describe("chat-api", () => {
       orchestrator: createMockOrchestrator([]),
       logger: createLogger("silent"),
       config: { ...baseConfig, rateLimitRpm: 1 },
+      sessionStore: new MemorySessionStore(),
     });
 
     const first = await app.request("/chat/sessions", { method: "POST" });

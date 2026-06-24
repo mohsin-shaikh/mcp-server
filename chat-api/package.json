@@ -17,14 +17,20 @@
     "build": "tsup",
     "test": "vitest run",
     "lint": "eslint src/",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "load-test": "tsx scripts/load-test.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.9",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.57.0",
+    "@opentelemetry/resources": "^1.30.0",
+    "@opentelemetry/sdk-node": "^0.57.0",
+    "@opentelemetry/semantic-conventions": "^1.28.0",
     "@zuupee/chat-orchestrator": "workspace:*",
     "@zuupee/mcp-client": "workspace:*",
     "hono": "^4.12.26",
-    "pino": "^9.6.0"
+    "pino": "^9.6.0",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

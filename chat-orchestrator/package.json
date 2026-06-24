@@ -20,6 +20,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "@zuupee/mcp-client": "workspace:*"
   },
   "devDependencies": {

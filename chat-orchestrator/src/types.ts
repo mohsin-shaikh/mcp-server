@@ -1,4 +1,5 @@
 import type { McpServerConfig } from "@zuupee/mcp-client";
+import type { ToolAuditLogger } from "./audit.js";
 
 export type ChatMessage =
   | { role: "user"; content: string }
@@ -19,6 +20,11 @@ export type OrchestratorConfig = {
   maxToolSteps?: number;
   toolAllowlist?: string[];
   readOnly?: boolean;
+  onToolAudit?: ToolAuditLogger;
+};
+
+export type OrchestratorRunOptions = {
+  sessionId?: string;
 };
 
 export type LlmToolCall = {
