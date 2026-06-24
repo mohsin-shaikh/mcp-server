@@ -1,0 +1,62 @@
+name: zuupee-chat
+
+services:
+  mock-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.mock-api
+    ports:
+      - "3999:3999"
+
+  mcp-core:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.mcp-server
+    environment:
+      MCP_MODULES: meta,json,datetime
+      READ_ONLY: "true"
+    expose:
+      - "3100"
+
+  mcp-orders:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.mcp-server
+    environment:
+      MCP_MODULES: meta,orders
+      READ_ONLY: "false"
+      ORDERS_API_BASE_URL: http://mock-api:3999
+      ORDERS_API_ALLOWED_HOSTS: mock-api,127.0.0.1,localhost
+    depends_on:
+      mock-api:
+        condition: service_healthy
+    expose:
+      - "3100"
+
+  chat-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.chat-api
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o}
+      CHAT_CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080
+    ports:
+      - "3200:3200"
+    depends_on:
+      mock-api:
+        condition: service_healthy
+      mcp-core:
+        condition: service_healthy
+      mcp-orders:
+        condition: service_healthy
+
+  widget:
+    image: nginx:alpine
+    volumes:
+      - ./chat-widget/dist:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - chat-api

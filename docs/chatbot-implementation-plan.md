@@ -364,11 +364,11 @@ Embeddable chat for your site.
 
 #### MVP scope
 
-- [ ] Floating chat button + message panel
-- [ ] `fetch` + `EventSource` for SSE
-- [ ] Render user/assistant messages; show “Using tool…” during `tool_start`
-- [ ] Config: `data-api-url`, `data-theme` on script tag
-- [ ] Build: Vite → single `chat-widget.js` bundle for `<script src="...">` embed
+- [x] Floating chat button + message panel
+- [x] `fetch` + `EventSource` for SSE
+- [x] Render user/assistant messages; show “Using tool…” during `tool_start`
+- [x] Config: `data-api-url`, `data-theme` on script tag
+- [x] Build: Vite → single `chat-widget.js` bundle for `<script src="...">` embed
 
 #### Non-goals for MVP
 
@@ -515,11 +515,11 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ### Phase 5 — `chat-widget` + E2E (1 week)
 
-- [ ] Minimal embeddable UI
-- [ ] Connect to `chat-api` SSE
-- [ ] Tool status indicators
-- [ ] Docker Compose: `mcp-server` (http) + `chat-api` + optional static file server for widget demo
-- [ ] Manual E2E test checklist
+- [x] Minimal embeddable UI
+- [x] Connect to `chat-api` SSE
+- [x] Tool status indicators
+- [x] Docker Compose: `mcp-server` (http) + `chat-api` + optional static file server for widget demo
+- [x] Manual E2E test checklist
 
 **Exit:** Browser chat on `localhost` calls real MCP tools and streams reply.
 
