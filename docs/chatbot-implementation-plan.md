@@ -292,12 +292,12 @@ Implement **one provider first** (OpenAI `gpt-4o` or Anthropic `claude-sonnet-4`
 
 #### MVP scope
 
-- [ ] ReAct loop with streaming text
-- [ ] OpenAI **or** Anthropic tool-calling (pick one for v1)
-- [ ] `maxToolSteps` guard
-- [ ] Tool allowlist
-- [ ] Graceful handling of tool errors (return to model as `isError`)
-- [ ] Unit tests with mocked LLM + mocked `McpToolRegistry`
+- [x] ReAct loop with streaming text
+- [x] OpenAI **or** Anthropic tool-calling (pick one for v1)
+- [x] `maxToolSteps` guard
+- [x] Tool allowlist
+- [x] Graceful handling of tool errors (return to model as `isError`)
+- [x] Unit tests with mocked LLM + mocked `McpToolRegistry`
 
 ---
 
@@ -490,12 +490,12 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ### Phase 3 — `chat-orchestrator` (1–2 weeks)
 
-- [ ] Scaffold package; define `LlmAdapter` interface
-- [ ] Implement OpenAI or Anthropic adapter with streaming + tool calls
-- [ ] Implement `ChatOrchestrator.run()` ReAct loop
-- [ ] Wire `McpToolRegistry`; enforce `maxToolSteps` and allowlist
-- [ ] Unit tests: mock LLM returns tool call → registry called → final text
-- [ ] CLI: `pnpm -C chat-orchestrator dev -- "What is my order status for 123?"`
+- [x] Scaffold package; define `LlmAdapter` interface
+- [x] Implement OpenAI or Anthropic adapter with streaming + tool calls
+- [x] Implement `ChatOrchestrator.run()` ReAct loop
+- [x] Wire `McpToolRegistry`; enforce `maxToolSteps` and allowlist
+- [x] Unit tests: mock LLM returns tool call → registry called → final text
+- [x] CLI: `pnpm -C chat-orchestrator dev -- "What is my order status for 123?"`
 
 **Exit:** Terminal demo answers using live MCP tools.
 

@@ -1,0 +1,30 @@
+{
+  "servers": [
+    {
+      "id": "core",
+      "transport": "stdio",
+      "command": "pnpm",
+      "args": ["--dir", "mcp-server", "exec", "tsx", "src/index.ts"],
+      "env": {
+        "MCP_MODULES": "meta,json,datetime",
+        "MCP_PLUGINS_DIR": "./plugins",
+        "READ_ONLY": "true",
+        "LOG_LEVEL": "fatal"
+      }
+    },
+    {
+      "id": "orders",
+      "transport": "stdio",
+      "command": "pnpm",
+      "args": ["--dir", "mcp-server", "exec", "tsx", "src/index.ts"],
+      "env": {
+        "MCP_MODULES": "meta,orders",
+        "MCP_PLUGINS_DIR": "./plugins",
+        "READ_ONLY": "false",
+        "ORDERS_API_BASE_URL": "http://127.0.0.1:3999",
+        "ORDERS_API_ALLOWED_HOSTS": "127.0.0.1,localhost",
+        "LOG_LEVEL": "fatal"
+      }
+    }
+  ]
+}

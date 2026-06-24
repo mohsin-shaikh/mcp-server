@@ -8,7 +8,7 @@ Monorepo for Zuupee's [Model Context Protocol (MCP)](https://modelcontextprotoco
 | ------------------------------------------- | ----------- | ---------------------------------------------------------------------------- |
 | [`mcp-server`](./mcp-server/)               | Available   | General-purpose MCP server with pluggable modules, stdio and HTTP transports |
 | [`mcp-client`](./mcp-client/)               | In progress | Multi-server MCP client with namespaced tools                                |
-| [`chat-orchestrator`](./chat-orchestrator/) | Scaffold    | Custom ReAct agent loop (Phase 3)                                            |
+| [`chat-orchestrator`](./chat-orchestrator/) | Available   | Custom ReAct agent loop with OpenAI + MCP tools                              |
 | [`chat-api`](./chat-api/)                   | Scaffold    | HTTP API + SSE for the website chatbot (Phase 4)                             |
 | [`mock-api-server`](./mock-api-server/)     | Available   | Local JSON orders API for dev and tests                                      |
 
@@ -44,13 +44,26 @@ pnpm dev:mock-orders
 
 Then run `mcp-server` with `MCP_MODULES=meta,orders` and `ORDERS_API_BASE_URL=http://127.0.0.1:3999`.
 
+### Chat orchestrator (terminal demo)
+
+Set `OPENAI_API_KEY` in `.env`, then:
+
+```bash
+# Terminal 1
+pnpm dev:mock-orders
+
+# Terminal 2
+MCP_SERVERS_CONFIG=./config/mcp-servers.chat.example.json \
+pnpm dev:orchestrator -- "What is the status of order ord_123?"
+```
+
 ### Chat API (scaffold)
 
 ```bash
 pnpm dev:chat
 ```
 
-Copy `.env.example` to `.env` and fill in LLM/MCP settings when orchestrator wiring lands.
+Copy `.env.example` to `.env` and set `OPENAI_API_KEY` for orchestrator demos.
 
 ## Repository layout
 
