@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  healthUrlFromMcpUrl,
-  namespaceTool,
-  parseNamespacedTool,
-} from "../src/namespace.js";
+import { healthUrlFromMcpUrl, namespaceTool, parseNamespacedTool } from "../src/namespace.js";
 
 describe("namespaceTool", () => {
   it("joins server id and tool name", () => {
@@ -27,8 +23,6 @@ describe("parseNamespacedTool", () => {
 
 describe("healthUrlFromMcpUrl", () => {
   it("replaces the MCP path with /health", () => {
-    expect(healthUrlFromMcpUrl("http://127.0.0.1:3100/mcp")).toBe(
-      "http://127.0.0.1:3100/health",
-    );
+    expect(healthUrlFromMcpUrl("http://127.0.0.1:3100/mcp")).toBe("http://127.0.0.1:3100/health");
   });
 });

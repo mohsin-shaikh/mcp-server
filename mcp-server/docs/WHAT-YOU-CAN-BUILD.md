@@ -8,14 +8,14 @@ The server is **domain-agnostic**. It ships transport, auth, validation, observa
 
 ## At a glance
 
-| Category | What you build | How |
-| -------- | -------------- | --- |
-| **Custom integrations** | Domain MCP servers (GitHub, Jira, Stripe, internal APIs) | Plugin under `plugins/` or separate npm package |
-| **API bridges** | REST/OpenAPI-backed tool sets for any HTTP API | `http` + `openapi` modules, or custom module |
-| **Codebase assistants** | Repo-aware agents with sandboxed file access | `filesystem` module + `FS_ROOT` |
-| **Hosted MCP services** | Remote MCP for teams or SaaS | HTTP transport + API key auth + Docker |
-| **Safe exploration agents** | Read-only API discovery workflows | `READ_ONLY=true` + prompts + allowlists |
-| **Observability-backed ops** | Production MCP with metrics and audit logs | OpenTelemetry + Prometheus/Grafana stack |
+| Category                     | What you build                                           | How                                             |
+| ---------------------------- | -------------------------------------------------------- | ----------------------------------------------- |
+| **Custom integrations**      | Domain MCP servers (GitHub, Jira, Stripe, internal APIs) | Plugin under `plugins/` or separate npm package |
+| **API bridges**              | REST/OpenAPI-backed tool sets for any HTTP API           | `http` + `openapi` modules, or custom module    |
+| **Codebase assistants**      | Repo-aware agents with sandboxed file access             | `filesystem` module + `FS_ROOT`                 |
+| **Hosted MCP services**      | Remote MCP for teams or SaaS                             | HTTP transport + API key auth + Docker          |
+| **Safe exploration agents**  | Read-only API discovery workflows                        | `READ_ONLY=true` + prompts + allowlists         |
+| **Observability-backed ops** | Production MCP with metrics and audit logs               | OpenTelemetry + Prometheus/Grafana stack        |
 
 ---
 
@@ -25,18 +25,18 @@ Before adding domain logic, the server already gives you:
 
 ### Transports
 
-| Transport | Use case |
-| --------- | -------- |
-| **stdio** | Local dev — Cursor, Claude Desktop, MCP Inspector |
+| Transport           | Use case                                                         |
+| ------------------- | ---------------------------------------------------------------- |
+| **stdio**           | Local dev — Cursor, Claude Desktop, MCP Inspector                |
 | **Streamable HTTP** | Remote deployment — shared team server, cloud, Docker/Kubernetes |
 
 ### MCP capabilities
 
-| Capability | Purpose |
-| ---------- | ------- |
-| **Tools** | Actions the model can invoke (fetch data, call APIs, read files) |
+| Capability    | Purpose                                                                |
+| ------------- | ---------------------------------------------------------------------- |
+| **Tools**     | Actions the model can invoke (fetch data, call APIs, read files)       |
 | **Resources** | Read-only context the model can pull (`mcp://docs/...`, config schema) |
-| **Prompts** | Reusable workflow templates (`explore_api`, `debug_tool_error`, etc.) |
+| **Prompts**   | Reusable workflow templates (`explore_api`, `debug_tool_error`, etc.)  |
 
 ### Cross-cutting infrastructure
 
@@ -58,16 +58,16 @@ These ship with the server and can be combined or extended.
 
 ### `meta` — server introspection
 
-| Tool | Use |
-| ---- | --- |
+| Tool          | Use                                              |
+| ------------- | ------------------------------------------------ |
 | `server_info` | Inspect enabled modules, version, config summary |
 
 **Build with it:** health dashboards, debugging misconfigured clients, agent self-diagnosis.
 
 ### `http` — generic HTTP client
 
-| Tool | Use |
-| ---- | --- |
+| Tool         | Use                                                 |
+| ------------ | --------------------------------------------------- |
 | `http_fetch` | GET/POST/PUT/PATCH/DELETE against allowlisted hosts |
 
 **Build with it:** quick REST integrations without writing a full module; prototyping API access; calling webhooks.
@@ -76,43 +76,43 @@ Requires `HTTP_TOOL_ALLOWED_HOSTS`. Skipped when `READ_ONLY=true`.
 
 ### `json` — JSON utilities
 
-| Tool | Use |
-| ---- | --- |
-| `json_parse` | Parse JSON strings |
-| `json_stringify` | Serialize values to formatted JSON |
-| `json_pick` | Extract dot/bracket paths from JSON |
+| Tool             | Use                                 |
+| ---------------- | ----------------------------------- |
+| `json_parse`     | Parse JSON strings                  |
+| `json_stringify` | Serialize values to formatted JSON  |
+| `json_pick`      | Extract dot/bracket paths from JSON |
 
 **Build with it:** response shaping, data extraction pipelines, lightweight ETL in agent workflows.
 
 ### `datetime` — time helpers
 
-| Tool | Use |
-| ---- | --- |
-| `datetime_now` | Current time (ISO 8601) |
+| Tool              | Use                           |
+| ----------------- | ----------------------------- |
+| `datetime_now`    | Current time (ISO 8601)       |
 | `datetime_format` | Format/parse ISO date strings |
 
 **Build with it:** scheduling agents, log timestamp normalization, time-window queries.
 
 ### `docs` — resources and prompts
 
-| Resource / prompt | Use |
-| ----------------- | --- |
-| `mcp://docs/build-plan` | Project build plan |
-| `mcp://docs/modules/{id}` | Per-module usage docs |
-| `mcp://config/schema` | JSON Schema of server config |
-| `explore_api` | Safe REST API discovery workflow |
-| `debug_tool_error` | Checklist when a tool fails |
-| `design_new_module` | Guide for adding a new module |
+| Resource / prompt         | Use                              |
+| ------------------------- | -------------------------------- |
+| `mcp://docs/build-plan`   | Project build plan               |
+| `mcp://docs/modules/{id}` | Per-module usage docs            |
+| `mcp://config/schema`     | JSON Schema of server config     |
+| `explore_api`             | Safe REST API discovery workflow |
+| `debug_tool_error`        | Checklist when a tool fails      |
+| `design_new_module`       | Guide for adding a new module    |
 
 **Build with it:** self-documenting MCP servers; onboarding agents to your server's capabilities.
 
 ### `filesystem` — sandboxed file access (opt-in)
 
-| Tool | Use |
-| ---- | --- |
-| `read_file` | Read a file under `FS_ROOT` |
-| `list_dir` | List directory entries |
-| `search_files` | Find files by name pattern |
+| Tool           | Use                         |
+| -------------- | --------------------------- |
+| `read_file`    | Read a file under `FS_ROOT` |
+| `list_dir`     | List directory entries      |
+| `search_files` | Find files by name pattern  |
 
 **Build with it:** codebase Q&A, doc search, config inspection — without giving the agent unrestricted disk access.
 
@@ -120,10 +120,10 @@ Requires `FS_ROOT`. Not enabled by default.
 
 ### `openapi` — REST from OpenAPI 3 specs (opt-in)
 
-| Tool | Use |
-| ---- | --- |
-| `openapi_list_operations` | List `operationId`s from a spec URL |
-| `openapi_call` | Invoke an operation by `operationId` |
+| Tool                      | Use                                  |
+| ------------------------- | ------------------------------------ |
+| `openapi_list_operations` | List `operationId`s from a spec URL  |
+| `openapi_call`            | Invoke an operation by `operationId` |
 
 **Build with it:** instant MCP tool surface for any documented REST API — Stripe, Twilio, your own services — without hand-writing every endpoint.
 
@@ -139,13 +139,13 @@ The primary extension model. Wrap any backend — REST, GraphQL, gRPC, database,
 
 **Examples:**
 
-| Server | Tools you might expose |
-| ------ | ---------------------- |
-| **GitHub MCP** | `github_list_prs`, `github_create_issue`, `github_get_file` |
-| **Postgres MCP** | `db_query`, `db_list_tables`, `db_describe_schema` |
-| **Stripe MCP** | `stripe_list_customers`, `stripe_create_payment` |
-| **Internal CRM MCP** | `crm_search_contacts`, `crm_update_deal` |
-| **CI/CD MCP** | `ci_trigger_build`, `ci_get_logs`, `ci_list_pipelines` |
+| Server               | Tools you might expose                                      |
+| -------------------- | ----------------------------------------------------------- |
+| **GitHub MCP**       | `github_list_prs`, `github_create_issue`, `github_get_file` |
+| **Postgres MCP**     | `db_query`, `db_list_tables`, `db_describe_schema`          |
+| **Stripe MCP**       | `stripe_list_customers`, `stripe_create_payment`            |
+| **Internal CRM MCP** | `crm_search_contacts`, `crm_update_deal`                    |
+| **CI/CD MCP**        | `ci_trigger_build`, `ci_get_logs`, `ci_list_pipelines`      |
 
 **Two ways to ship:**
 
@@ -182,10 +182,9 @@ export const myServiceModule: McpModule = {
       },
       wrapToolHandler(ctx, "my_service_list_items", async ({ limit }) => {
         const apiKey = ctx.secrets.require("MY_SERVICE_API_KEY");
-        const res = await ctx.http.fetch(
-          `https://api.example.com/items?limit=${limit}`,
-          { headers: { Authorization: `Bearer ${apiKey}` } },
-        );
+        const res = await ctx.http.fetch(`https://api.example.com/items?limit=${limit}`, {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        });
         // handle response, return toolText() or toolJson()
       }),
     );
@@ -195,14 +194,14 @@ export const myServiceModule: McpModule = {
 
 **Context available to every module:**
 
-| API | Purpose |
-| --- | ------- |
-| `ctx.config` | Parsed server config |
-| `ctx.secrets` | Env-backed secrets (`get`, `require`) — never in tool args |
-| `ctx.http.fetch` | HTTP client for upstream calls |
-| `ctx.logger` | Structured logging with request ID |
-| `ctx.isHostAllowed(url)` | Host allowlist check |
-| `ctx.metrics` | Tool call telemetry |
+| API                      | Purpose                                                    |
+| ------------------------ | ---------------------------------------------------------- |
+| `ctx.config`             | Parsed server config                                       |
+| `ctx.secrets`            | Env-backed secrets (`get`, `require`) — never in tool args |
+| `ctx.http.fetch`         | HTTP client for upstream calls                             |
+| `ctx.logger`             | Structured logging with request ID                         |
+| `ctx.isHostAllowed(url)` | Host allowlist check                                       |
+| `ctx.metrics`            | Tool call telemetry                                        |
 
 See [build-plan.md Appendix A](./build-plan.md) for the full example.
 
@@ -321,13 +320,13 @@ See [OBSERVABILITY.md](./OBSERVABILITY.md).
 
 Modules compose. Common profiles:
 
-| Profile | Modules | Typical use |
-| ------- | ------- | ----------- |
-| **Minimal** | `meta,json,datetime` | Lightweight utility server |
-| **API worker** | `meta,http,json,openapi` | External API integration |
-| **Dev assistant** | `meta,docs,filesystem,json` | Local codebase help |
-| **Full generic** | `*` (all built-in except opt-in) | Maximum built-in capability |
-| **Custom product** | `meta,<your-plugins>` | Domain-specific server |
+| Profile            | Modules                          | Typical use                 |
+| ------------------ | -------------------------------- | --------------------------- |
+| **Minimal**        | `meta,json,datetime`             | Lightweight utility server  |
+| **API worker**     | `meta,http,json,openapi`         | External API integration    |
+| **Dev assistant**  | `meta,docs,filesystem,json`      | Local codebase help         |
+| **Full generic**   | `*` (all built-in except opt-in) | Maximum built-in capability |
+| **Custom product** | `meta,<your-plugins>`            | Domain-specific server      |
 
 Enable with `MCP_MODULES` or `MCP_MODULES=*` for all default built-ins.
 
@@ -337,15 +336,15 @@ Enable with `MCP_MODULES` or `MCP_MODULES=*` for all default built-ins.
 
 The framework does not ship domain connectors — it documents how to add them:
 
-| Backend | Pattern |
-| ------- | ------- |
-| **REST APIs** | `ctx.http.fetch` in a custom module, or `openapi` module |
-| **GraphQL** | Custom module: POST to endpoint with query/mutation in tool handler |
-| **gRPC** | Custom module: use `@grpc/grpc-js` client in `register()` |
-| **SQL databases** | Custom module: `pg`, `mysql2`, or ORM in tool handlers |
-| **Local CLIs** | Custom module: `child_process` with command allowlist |
-| **Message queues** | Custom module: publish/consume via SDK in tools |
-| **File stores (S3, GCS)** | Custom module: SDK calls; or `filesystem` for local paths |
+| Backend                   | Pattern                                                             |
+| ------------------------- | ------------------------------------------------------------------- |
+| **REST APIs**             | `ctx.http.fetch` in a custom module, or `openapi` module            |
+| **GraphQL**               | Custom module: POST to endpoint with query/mutation in tool handler |
+| **gRPC**                  | Custom module: use `@grpc/grpc-js` client in `register()`           |
+| **SQL databases**         | Custom module: `pg`, `mysql2`, or ORM in tool handlers              |
+| **Local CLIs**            | Custom module: `child_process` with command allowlist               |
+| **Message queues**        | Custom module: publish/consume via SDK in tools                     |
+| **File stores (S3, GCS)** | Custom module: SDK calls; or `filesystem` for local paths           |
 
 **Rules of thumb:**
 
@@ -399,23 +398,24 @@ Point MCP clients that support Streamable HTTP to `POST https://your-host/mcp` w
 
 ---
 
-## 6. What this server is *not* for
+## 6. What this server is _not_ for
 
 To set expectations:
 
-| Out of scope | Notes |
-| ------------ | ----- |
-| MCP **client** | This is server-side only |
-| Hosted plugin marketplace | Plugins are local path or separate packages |
-| Deprecated SSE transport | Use Streamable HTTP for remote |
+| Out of scope                           | Notes                                            |
+| -------------------------------------- | ------------------------------------------------ |
+| MCP **client**                         | This is server-side only                         |
+| Hosted plugin marketplace              | Plugins are local path or separate packages      |
+| Deprecated SSE transport               | Use Streamable HTTP for remote                   |
 | Unrestricted network/filesystem access | Deny-by-default allowlists and `FS_ROOT` sandbox |
-| Product-specific integrations in core | Add via modules/plugins, don't fork core |
+| Product-specific integrations in core  | Add via modules/plugins, don't fork core         |
 
 ---
 
 ## 7. Getting started checklist
 
 1. **Clone and run locally**
+
    ```bash
    pnpm install && cp .env.example .env.local
    pnpm dev
@@ -428,6 +428,7 @@ To set expectations:
 4. **Configure security** — `HTTP_TOOL_ALLOWED_HOSTS`, `FS_ROOT`, `READ_ONLY`, `MCP_API_KEY`
 
 5. **Test with MCP Inspector**
+
    ```bash
    pnpm inspect
    ```
@@ -440,13 +441,13 @@ To set expectations:
 
 ## 8. Related docs
 
-| Document | Contents |
-| -------- | -------- |
-| [README.md](../README.md) | Quick start, tool table, env vars |
-| [build-plan.md](./build-plan.md) | Architecture, phases, extension guide |
-| [DEPLOY.md](./DEPLOY.md) | HTTP deployment, Docker, health checks |
-| [OBSERVABILITY.md](./OBSERVABILITY.md) | Metrics, Prometheus, Grafana |
-| [RELEASING.md](./RELEASING.md) | Versioning and npm publish |
+| Document                               | Contents                               |
+| -------------------------------------- | -------------------------------------- |
+| [README.md](../README.md)              | Quick start, tool table, env vars      |
+| [build-plan.md](./build-plan.md)       | Architecture, phases, extension guide  |
+| [DEPLOY.md](./DEPLOY.md)               | HTTP deployment, Docker, health checks |
+| [OBSERVABILITY.md](./OBSERVABILITY.md) | Metrics, Prometheus, Grafana           |
+| [RELEASING.md](./RELEASING.md)         | Versioning and npm publish             |
 
 ---
 

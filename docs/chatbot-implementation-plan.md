@@ -22,12 +22,12 @@ Deliver a production-ready chatbot stack where:
 
 ### Architecture choice (locked)
 
-| Layer | Decision |
-| ----- | -------- |
-| Tool access | **MCP servers** (not direct REST calls from orchestrator) |
+| Layer           | Decision                                                                |
+| --------------- | ----------------------------------------------------------------------- |
+| Tool access     | **MCP servers** (not direct REST calls from orchestrator)               |
 | Protocol client | **`@zuupee/mcp-client`** — custom, wraps `@modelcontextprotocol/client` |
-| Agent loop | **Custom orchestrator** — TypeScript, no LangGraph/CrewAI/Cursor SDK |
-| LLM | Provider SDK (OpenAI or Anthropic recommended for tool-calling) |
+| Agent loop      | **Custom orchestrator** — TypeScript, no LangGraph/CrewAI/Cursor SDK    |
+| LLM             | Provider SDK (OpenAI or Anthropic recommended for tool-calling)         |
 
 ### Non-goals (initial release)
 
@@ -39,14 +39,14 @@ Deliver a production-ready chatbot stack where:
 
 ### Success criteria
 
-| Criterion | Target |
-| --------- | ------ |
-| End-to-end demo | User sends message on website → agent calls MCP tool → grounded reply in &lt; 10s (p95) |
-| Tool surface | At least 1 domain MCP plugin (e.g. orders, docs, CRM) + `@zuupee/mcp-server` generic tools |
-| Streaming | Token stream + tool-call status events to the browser |
-| Safety | Read-only mode supported; mutating tools behind config flag |
-| Deploy | MCP server (HTTP) + chat API + static/widget frontend runnable via Docker Compose |
-| Tests | Unit tests for orchestrator loop; integration test client → server → tool |
+| Criterion       | Target                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| End-to-end demo | User sends message on website → agent calls MCP tool → grounded reply in &lt; 10s (p95)    |
+| Tool surface    | At least 1 domain MCP plugin (e.g. orders, docs, CRM) + `@zuupee/mcp-server` generic tools |
+| Streaming       | Token stream + tool-call status events to the browser                                      |
+| Safety          | Read-only mode supported; mutating tools behind config flag                                |
+| Deploy          | MCP server (HTTP) + chat API + static/widget frontend runnable via Docker Compose          |
+| Tests           | Unit tests for orchestrator loop; integration test client → server → tool                  |
 
 ---
 
@@ -134,13 +134,13 @@ Introduce a pnpm workspace at the repo root when implementation starts.
 
 ### Package responsibilities
 
-| Package | Role | Depends on |
-| ------- | ---- | ---------- |
-| `mcp-server` | Expose tools/resources; domain plugins | — |
-| `mcp-client` | MCP protocol, multi-server, tool namespacing | `@modelcontextprotocol/client` |
-| `chat-orchestrator` | ReAct loop, LLM adapter, prompts, limits | `mcp-client` |
-| `chat-api` | HTTP API, sessions, auth, SSE/WebSocket | `chat-orchestrator` |
-| `chat-widget` | React/Vanilla embeddable chat UI | `chat-api` (HTTP only) |
+| Package             | Role                                         | Depends on                     |
+| ------------------- | -------------------------------------------- | ------------------------------ |
+| `mcp-server`        | Expose tools/resources; domain plugins       | —                              |
+| `mcp-client`        | MCP protocol, multi-server, tool namespacing | `@modelcontextprotocol/client` |
+| `chat-orchestrator` | ReAct loop, LLM adapter, prompts, limits     | `mcp-client`                   |
+| `chat-api`          | HTTP API, sessions, auth, SSE/WebSocket      | `chat-orchestrator`            |
+| `chat-widget`       | React/Vanilla embeddable chat UI             | `chat-api` (HTTP only)         |
 
 Keep **orchestrator free of HTTP concerns** and **mcp-client free of LLM concerns** so each layer stays testable in isolation.
 
@@ -157,7 +157,13 @@ Thin wrapper over the official SDK. No LLM imports.
 ```typescript
 // config
 type McpServerConfig =
-  | { id: string; transport: "stdio"; command: string; args?: string[]; env?: Record<string, string> }
+  | {
+      id: string;
+      transport: "stdio";
+      command: string;
+      args?: string[];
+      env?: Record<string, string>;
+    }
   | { id: string; transport: "http"; url: string; apiKey?: string };
 
 // connection manager
@@ -173,9 +179,9 @@ class McpConnectionManager {
 class McpToolRegistry {
   constructor(manager: McpConnectionManager);
   refresh(): Promise<void>;
-  listTools(): McpToolDefinition[];           // namespaced: "core__http_fetch"
+  listTools(): McpToolDefinition[]; // namespaced: "core__http_fetch"
   callTool(namespacedName: string, args: unknown): Promise<ToolResult>;
-  getServerInstructions(): string;              // merged from all servers
+  getServerInstructions(): string; // merged from all servers
 }
 
 // LLM schema adapters
@@ -218,9 +224,9 @@ type OrchestratorConfig = {
   llm: { provider: "openai" | "anthropic"; model: string; apiKey: string };
   mcp: McpServerConfig[];
   systemPrompt?: string;
-  maxToolSteps?: number;           // default 10
-  toolAllowlist?: string[];        // namespaced tool names; empty = all
-  readOnly?: boolean;              // block non-read-only tools if server exposes metadata
+  maxToolSteps?: number; // default 10
+  toolAllowlist?: string[]; // namespaced tool names; empty = all
+  readOnly?: boolean; // block non-read-only tools if server exposes metadata
 };
 
 type ChatMessage =
@@ -272,7 +278,7 @@ interface LlmAdapter {
     messages: LlmMessage[];
     tools: unknown[];
     stream: boolean;
-  }): AsyncIterable<LlmChunk>;  // text deltas + tool_call chunks
+  }): AsyncIterable<LlmChunk>; // text deltas + tool_call chunks
 }
 ```
 
@@ -301,12 +307,12 @@ HTTP host for the website. Thin layer over orchestrator.
 
 #### Endpoints (MVP)
 
-| Method | Path | Purpose |
-| ------ | ---- | ------- |
-| `POST` | `/chat/sessions` | Create session; returns `{ sessionId }` |
-| `POST` | `/chat/sessions/:id/messages` | Send user message; returns SSE stream |
-| `GET` | `/chat/sessions/:id/messages` | List history (for page reload) |
-| `GET` | `/health` | Liveness + MCP connection status |
+| Method | Path                          | Purpose                                 |
+| ------ | ----------------------------- | --------------------------------------- |
+| `POST` | `/chat/sessions`              | Create session; returns `{ sessionId }` |
+| `POST` | `/chat/sessions/:id/messages` | Send user message; returns SSE stream   |
+| `GET`  | `/chat/sessions/:id/messages` | List history (for page reload)          |
+| `GET`  | `/health`                     | Liveness + MCP connection status        |
 
 #### Streaming
 
@@ -328,10 +334,10 @@ data: {"message":"Your order #123 ships tomorrow."}
 
 #### Session store
 
-| Phase | Store | Notes |
-| ----- | ----- | ----- |
-| MVP | In-memory `Map` | Single instance only |
-| v1.1 | Redis | Horizontal scale, TTL |
+| Phase | Store           | Notes                 |
+| ----- | --------------- | --------------------- |
+| MVP   | In-memory `Map` | Single instance only  |
+| v1.1  | Redis           | Horizontal scale, TTL |
 
 Persist: `sessionId`, `messages[]`, `createdAt`, optional `userId`.
 
@@ -378,20 +384,20 @@ The chatbot does **not** call your REST APIs directly. Domain access goes throug
 
 ### Server topology
 
-| Server | Contents | Transport (dev) | Transport (prod) |
-| ------ | -------- | --------------- | ---------------- |
-| **core** | `@zuupee/mcp-server` — `meta`, `http`, `json`, `datetime`, `docs` | stdio | HTTP |
-| **domain** | Custom plugin(s) — your business tools | stdio | HTTP (separate container or same process) |
+| Server     | Contents                                                          | Transport (dev) | Transport (prod)                          |
+| ---------- | ----------------------------------------------------------------- | --------------- | ----------------------------------------- |
+| **core**   | `@zuupee/mcp-server` — `meta`, `http`, `json`, `datetime`, `docs` | stdio           | HTTP                                      |
+| **domain** | Custom plugin(s) — your business tools                            | stdio           | HTTP (separate container or same process) |
 
 ### Domain plugin example (`orders`)
 
 Tools to implement in `mcp-server/plugins/orders/` (or separate deployable):
 
-| Tool | Description | Read-only |
-| ---- | ----------- | --------- |
-| `get_order` | Fetch order by ID from your API | yes |
-| `list_orders` | List orders for authenticated user | yes |
-| `cancel_order` | Cancel order | no (gated) |
+| Tool           | Description                        | Read-only  |
+| -------------- | ---------------------------------- | ---------- |
+| `get_order`    | Fetch order by ID from your API    | yes        |
+| `list_orders`  | List orders for authenticated user | yes        |
+| `cancel_order` | Cancel order                       | no (gated) |
 
 Use `ctx.http.fetch` with allowlisted hosts or inject an internal API client via plugin context.
 
@@ -534,41 +540,41 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ### Environment variables (chat stack)
 
-| Variable | Used by | Description |
-| -------- | ------- | ----------- |
-| `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` | orchestrator | LLM provider |
-| `LLM_PROVIDER` | orchestrator | `openai` \| `anthropic` |
-| `LLM_MODEL` | orchestrator | e.g. `gpt-4o`, `claude-sonnet-4-20250514` |
-| `MCP_SERVERS_CONFIG` | mcp-client | Path to JSON server list |
-| `MCP_CORE_API_KEY` | mcp-client | HTTP auth to core server |
-| `CHAT_CORS_ORIGINS` | chat-api | e.g. `https://www.example.com` |
-| `CHAT_RATE_LIMIT_RPM` | chat-api | Requests per minute per IP |
-| `CHAT_MAX_TOOL_STEPS` | orchestrator | Default `10` |
-| `CHAT_TOOL_ALLOWLIST` | orchestrator | Comma-separated namespaced tools; empty = all |
-| `CHAT_SYSTEM_PROMPT` | orchestrator | Override base persona |
+| Variable                                | Used by      | Description                                   |
+| --------------------------------------- | ------------ | --------------------------------------------- |
+| `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` | orchestrator | LLM provider                                  |
+| `LLM_PROVIDER`                          | orchestrator | `openai` \| `anthropic`                       |
+| `LLM_MODEL`                             | orchestrator | e.g. `gpt-4o`, `claude-sonnet-4-20250514`     |
+| `MCP_SERVERS_CONFIG`                    | mcp-client   | Path to JSON server list                      |
+| `MCP_CORE_API_KEY`                      | mcp-client   | HTTP auth to core server                      |
+| `CHAT_CORS_ORIGINS`                     | chat-api     | e.g. `https://www.example.com`                |
+| `CHAT_RATE_LIMIT_RPM`                   | chat-api     | Requests per minute per IP                    |
+| `CHAT_MAX_TOOL_STEPS`                   | orchestrator | Default `10`                                  |
+| `CHAT_TOOL_ALLOWLIST`                   | orchestrator | Comma-separated namespaced tools; empty = all |
+| `CHAT_SYSTEM_PROMPT`                    | orchestrator | Override base persona                         |
 
 ### Orchestrator defaults (recommended)
 
-| Setting | Value | Rationale |
-| ------- | ----- | --------- |
-| `maxToolSteps` | `10` | Prevent runaway loops |
-| `toolAllowlist` | core + domain read tools only in prod | Limit blast radius |
-| `READ_ONLY` on core server | `true` | Generic HTTP fetch not needed in prod chat |
-| Tool result max size | 32 KB → summarize if larger | Protect context window |
+| Setting                    | Value                                 | Rationale                                  |
+| -------------------------- | ------------------------------------- | ------------------------------------------ |
+| `maxToolSteps`             | `10`                                  | Prevent runaway loops                      |
+| `toolAllowlist`            | core + domain read tools only in prod | Limit blast radius                         |
+| `READ_ONLY` on core server | `true`                                | Generic HTTP fetch not needed in prod chat |
+| Tool result max size       | 32 KB → summarize if larger           | Protect context window                     |
 
 ---
 
 ## 8. Security
 
-| Risk | Mitigation |
-| ---- | ---------- |
-| Prompt injection via user message | System prompt rules; tool allowlist; no arbitrary `http_fetch` in prod |
-| Leaked API keys in browser | LLM + MCP keys only on server; widget talks to `chat-api` only |
-| Unauthorized data access | Pass `userId` from website auth into session; domain plugin validates ownership server-side |
-| Mutating tools | Off by default; `CHAT_TOOL_ALLOWLIST` excludes write tools in v1 |
-| MCP server compromise | Network isolate MCP HTTP; API key rotation; read-only DB credentials in plugins |
-| Rate abuse | IP rate limits; captcha on session create (v1.1) |
-| PII in logs | Redact tool args/results in logs; structured log scrubbing |
+| Risk                              | Mitigation                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------------- |
+| Prompt injection via user message | System prompt rules; tool allowlist; no arbitrary `http_fetch` in prod                      |
+| Leaked API keys in browser        | LLM + MCP keys only on server; widget talks to `chat-api` only                              |
+| Unauthorized data access          | Pass `userId` from website auth into session; domain plugin validates ownership server-side |
+| Mutating tools                    | Off by default; `CHAT_TOOL_ALLOWLIST` excludes write tools in v1                            |
+| MCP server compromise             | Network isolate MCP HTTP; API key rotation; read-only DB credentials in plugins             |
+| Rate abuse                        | IP rate limits; captcha on session create (v1.1)                                            |
+| PII in logs                       | Redact tool args/results in logs; structured log scrubbing                                  |
 
 **Important:** The orchestrator must not trust the model to enforce authorization. **Domain MCP plugins** must check the user/session context on every tool call (inject via env, or future: per-request MCP metadata).
 
@@ -576,11 +582,11 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ## 9. Observability
 
-| Signal | Where | What |
-| ------ | ----- | ---- |
-| Logs | chat-api, orchestrator, mcp-client | `sessionId`, `toolName`, latency, errors |
-| Metrics | All services | `chat_requests_total`, `tool_calls_total`, `llm_tokens`, `mcp_latency_ms` |
-| Traces | OTEL | Browser → API → orchestrator → MCP → upstream API |
+| Signal  | Where                              | What                                                                      |
+| ------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| Logs    | chat-api, orchestrator, mcp-client | `sessionId`, `toolName`, latency, errors                                  |
+| Metrics | All services                       | `chat_requests_total`, `tool_calls_total`, `llm_tokens`, `mcp_latency_ms` |
+| Traces  | OTEL                               | Browser → API → orchestrator → MCP → upstream API                         |
 
 Reuse patterns from [mcp-server OBSERVABILITY.md](../mcp-server/docs/OBSERVABILITY.md).
 
@@ -588,14 +594,14 @@ Reuse patterns from [mcp-server OBSERVABILITY.md](../mcp-server/docs/OBSERVABILI
 
 ## 10. Testing strategy
 
-| Layer | Test type | Focus |
-| ----- | --------- | ----- |
-| `mcp-client` | Integration | Real `mcp-server` stdio + http; tool list + call |
-| `chat-orchestrator` | Unit | Mock LLM + mock registry; step limit; error paths |
-| `chat-orchestrator` | Integration | Live MCP + recorded LLM fixtures (optional) |
-| `chat-api` | Integration | SSE event sequence; session persistence |
-| `chat-widget` | E2E (Playwright) | Send message, receive streamed reply |
-| Domain plugin | Unit | Handler logic with mocked upstream API |
+| Layer               | Test type        | Focus                                             |
+| ------------------- | ---------------- | ------------------------------------------------- |
+| `mcp-client`        | Integration      | Real `mcp-server` stdio + http; tool list + call  |
+| `chat-orchestrator` | Unit             | Mock LLM + mock registry; step limit; error paths |
+| `chat-orchestrator` | Integration      | Live MCP + recorded LLM fixtures (optional)       |
+| `chat-api`          | Integration      | SSE event sequence; session persistence           |
+| `chat-widget`       | E2E (Playwright) | Send message, receive streamed reply              |
+| Domain plugin       | Unit             | Handler logic with mocked upstream API            |
 
 ### Critical path smoke test
 
@@ -651,15 +657,15 @@ Services: `mcp-core`, `mcp-orders` (optional), `chat-api`, `redis` (optional pha
 
 ## 12. Timeline estimate
 
-| Phase | Duration | Cumulative |
-| ----- | -------- | ------------ |
-| 0 — Monorepo bootstrap | 1–2 days | ~2 days |
-| 1 — mcp-client | 1–2 weeks | ~2 weeks |
-| 2 — Domain plugin | 3–5 days | ~3 weeks |
-| 3 — Orchestrator | 1–2 weeks | ~5 weeks |
-| 4 — chat-api | 1 week | ~6 weeks |
-| 5 — Widget + E2E | 1 week | ~7 weeks |
-| 6 — Hardening | 2+ weeks | ~9 weeks |
+| Phase                  | Duration  | Cumulative |
+| ---------------------- | --------- | ---------- |
+| 0 — Monorepo bootstrap | 1–2 days  | ~2 days    |
+| 1 — mcp-client         | 1–2 weeks | ~2 weeks   |
+| 2 — Domain plugin      | 3–5 days  | ~3 weeks   |
+| 3 — Orchestrator       | 1–2 weeks | ~5 weeks   |
+| 4 — chat-api           | 1 week    | ~6 weeks   |
+| 5 — Widget + E2E       | 1 week    | ~7 weeks   |
+| 6 — Hardening          | 2+ weeks  | ~9 weeks   |
 
 **MVP (phases 0–5):** ~7 weeks for one engineer, assuming part-time domain API work already exists.
 
@@ -667,25 +673,25 @@ Services: `mcp-core`, `mcp-orders` (optional), `chat-api`, `redis` (optional pha
 
 ## 13. Open decisions (resolve before Phase 3)
 
-| # | Decision | Options | Recommendation |
-| - | -------- | ------- | -------------- |
-| 1 | LLM provider for v1 | OpenAI / Anthropic | Pick whichever your team already uses |
-| 2 | One vs two MCP server processes in prod | Monolith modules vs split | Single server with multiple modules for MVP; split when scaling |
-| 3 | Anonymous vs authenticated chat | Public FAQ vs logged-in users | Anonymous + rate limit for MVP; JWT in v1.1 |
-| 4 | User context to MCP tools | Header injection / tool args / future MCP metadata | Pass `userId` in orchestrator context; plugin reads from secure session store |
-| 5 | Widget framework | React / Preact / vanilla | Vanilla or Preact for smallest embed bundle |
+| #   | Decision                                | Options                                            | Recommendation                                                                |
+| --- | --------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1   | LLM provider for v1                     | OpenAI / Anthropic                                 | Pick whichever your team already uses                                         |
+| 2   | One vs two MCP server processes in prod | Monolith modules vs split                          | Single server with multiple modules for MVP; split when scaling               |
+| 3   | Anonymous vs authenticated chat         | Public FAQ vs logged-in users                      | Anonymous + rate limit for MVP; JWT in v1.1                                   |
+| 4   | User context to MCP tools               | Header injection / tool args / future MCP metadata | Pass `userId` in orchestrator context; plugin reads from secure session store |
+| 5   | Widget framework                        | React / Preact / vanilla                           | Vanilla or Preact for smallest embed bundle                                   |
 
 ---
 
 ## 14. Related reading
 
-| Doc | Topic |
-| --- | ----- |
-| [mcp-client-and-orchestrator.md](./mcp-client-and-orchestrator.md) | Options and considerations |
-| [mcp-server build-plan.md](../mcp-server/docs/build-plan.md) | Server architecture |
-| [mcp-server WHAT-YOU-CAN-BUILD.md](../mcp-server/docs/WHAT-YOU-CAN-BUILD.md) | Plugin patterns |
-| [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) | HTTP deployment |
-| [TypeScript MCP Client Guide](https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/client.md) | Official client SDK |
+| Doc                                                                                                            | Topic                      |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| [mcp-client-and-orchestrator.md](./mcp-client-and-orchestrator.md)                                             | Options and considerations |
+| [mcp-server build-plan.md](../mcp-server/docs/build-plan.md)                                                   | Server architecture        |
+| [mcp-server WHAT-YOU-CAN-BUILD.md](../mcp-server/docs/WHAT-YOU-CAN-BUILD.md)                                   | Plugin patterns            |
+| [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md)                                                           | HTTP deployment            |
+| [TypeScript MCP Client Guide](https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/client.md) | Official client SDK        |
 
 ---
 
@@ -693,10 +699,10 @@ Services: `mcp-core`, `mcp-orders` (optional), `chat-api`, `redis` (optional pha
 
 Build bottom-up:
 
-1. **`mcp-client`** — protocol layer, multi-server, namespaced tools  
-2. **Domain MCP plugin** — your data/APIs as tools on `mcp-server`  
-3. **`chat-orchestrator`** — custom ReAct loop + one LLM provider  
-4. **`chat-api`** — sessions, SSE, CORS, rate limits  
-5. **`chat-widget`** — website embed  
+1. **`mcp-client`** — protocol layer, multi-server, namespaced tools
+2. **Domain MCP plugin** — your data/APIs as tools on `mcp-server`
+3. **`chat-orchestrator`** — custom ReAct loop + one LLM provider
+4. **`chat-api`** — sessions, SSE, CORS, rate limits
+5. **`chat-widget`** — website embed
 
 The website never talks to MCP or the LLM directly. It only talks to **chat-api**, which owns the orchestrator and mcp-client. All business logic stays in **MCP tools**, shared with Cursor and other MCP hosts.

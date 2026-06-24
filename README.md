@@ -4,12 +4,12 @@ Monorepo for Zuupee's [Model Context Protocol (MCP)](https://modelcontextprotoco
 
 ## Packages
 
-| Package | Status | Description |
-| ------- | ------ | ----------- |
-| [`mcp-server`](./mcp-server/) | Available | General-purpose MCP server with pluggable modules, stdio and HTTP transports |
-| [`mcp-client`](./mcp-client/) | In progress | Multi-server MCP client with namespaced tools |
-| [`chat-orchestrator`](./chat-orchestrator/) | Scaffold | Custom ReAct agent loop (Phase 3) |
-| [`chat-api`](./chat-api/) | Scaffold | HTTP API + SSE for the website chatbot (Phase 4) |
+| Package                                     | Status      | Description                                                                  |
+| ------------------------------------------- | ----------- | ---------------------------------------------------------------------------- |
+| [`mcp-server`](./mcp-server/)               | Available   | General-purpose MCP server with pluggable modules, stdio and HTTP transports |
+| [`mcp-client`](./mcp-client/)               | In progress | Multi-server MCP client with namespaced tools                                |
+| [`chat-orchestrator`](./chat-orchestrator/) | Scaffold    | Custom ReAct agent loop (Phase 3)                                            |
+| [`chat-api`](./chat-api/)                   | Scaffold    | HTTP API + SSE for the website chatbot (Phase 4)                             |
 
 Domain plugins live under [`mcp-server/plugins/`](./mcp-server/plugins/) — see the `orders` plugin for a reference integration.
 

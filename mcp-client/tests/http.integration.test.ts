@@ -2,11 +2,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  McpConnectionManager,
-  McpToolRegistry,
-  namespaceTool,
-} from "../src/index.js";
+import { McpConnectionManager, McpToolRegistry, namespaceTool } from "../src/index.js";
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const serverEntry = resolve(repoRoot, "mcp-server/dist/index.js");

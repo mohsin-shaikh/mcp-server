@@ -1,10 +1,6 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  loadMcpServersConfig,
-  McpConnectionManager,
-  McpToolRegistry,
-} from "../src/index.js";
+import { loadMcpServersConfig, McpConnectionManager, McpToolRegistry } from "../src/index.js";
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const defaultConfigPath = resolve(repoRoot, "config/mcp-servers.dev.json");

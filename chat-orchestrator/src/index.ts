@@ -29,7 +29,8 @@ export class ChatOrchestrator {
   async *run(_messages: ChatMessage[]): AsyncIterable<OrchestratorEvent> {
     yield {
       type: "error",
-      message: "ChatOrchestrator is not implemented yet — see Phase 3 of docs/chatbot-implementation-plan.md",
+      message:
+        "ChatOrchestrator is not implemented yet — see Phase 3 of docs/chatbot-implementation-plan.md",
     };
   }
 

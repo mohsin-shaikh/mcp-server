@@ -3,3 +3,6 @@ packages:
   - mcp-client
   - chat-orchestrator
   - chat-api
+allowBuilds:
+  esbuild: true
+  protobufjs: true

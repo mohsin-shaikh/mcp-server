@@ -3,11 +3,7 @@ import type { McpConnectionManager } from "./connection-manager.js";
 import { formatCallToolResult } from "./format-result.js";
 import { namespaceTool, parseNamespacedTool } from "./namespace.js";
 import { truncateToolResult } from "./truncate.js";
-import type {
-  McpResourceDefinition,
-  McpToolDefinition,
-  ToolResult,
-} from "./types.js";
+import type { McpResourceDefinition, McpToolDefinition, ToolResult } from "./types.js";
 
 function asRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === "object" && !Array.isArray(value)) {
