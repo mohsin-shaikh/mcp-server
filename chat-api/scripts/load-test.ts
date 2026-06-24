@@ -27,10 +27,7 @@ function percentile(values: number[], p: number): number {
   return sorted[index] ?? 0;
 }
 
-async function runBatch(
-  count: number,
-  worker: () => Promise<TimedResult>,
-): Promise<TimedResult[]> {
+async function runBatch(count: number, worker: () => Promise<TimedResult>): Promise<TimedResult[]> {
   const results: TimedResult[] = [];
   let next = 0;
 

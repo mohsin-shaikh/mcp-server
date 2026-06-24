@@ -8,8 +8,7 @@ export async function initTelemetry(serviceName: string): Promise<() => Promise<
     return async () => undefined;
   }
 
-  const endpoint =
-    process.env["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://localhost:4318/v1/traces";
+  const endpoint = process.env["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://localhost:4318/v1/traces";
 
   const sdk = new NodeSDK({
     resource: new Resource({

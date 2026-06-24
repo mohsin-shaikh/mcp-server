@@ -5,7 +5,7 @@ Local JSON HTTP API that mimics an orders backend for development and tests. Use
 ## Run
 
 ```bash
-pnpm dev:mock-orders
+pnpm dev:mock-api-server
 ```
 
 Defaults:
@@ -34,7 +34,7 @@ Defaults:
 
 ```bash
 # Terminal 1
-pnpm dev:mock-orders
+pnpm dev:mock-api-server
 
 # Terminal 2 — mcp-server with orders module
 cd mcp-server

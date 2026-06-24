@@ -2,7 +2,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { loadPluginModule } from "../src/plugins/loader.js";
-import { startMockOrdersApi } from "./helpers/mock-orders-api.js";
+import { startMockOrdersApi } from "./helpers/mock-api-server.js";
 
 const tsxEntry = path.join(process.cwd(), "src/index.ts");
 const tsxBin = path.join(process.cwd(), "node_modules/.bin/tsx");

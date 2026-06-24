@@ -12,10 +12,10 @@ Use this checklist to verify the full browser → chat-api → orchestrator → 
 
 ### Steps
 
-1. **Start mock orders API**
+1. **Start mock API server**
 
    ```bash
-   pnpm dev:mock-orders
+   pnpm dev:mock-api-server
    ```
    - [ ] `curl http://127.0.0.1:3999/health` returns OK
 
@@ -83,10 +83,10 @@ Use this checklist to verify the full browser → chat-api → orchestrator → 
 
 ## Failure triage
 
-| Symptom                          | Likely cause                                                |
-| -------------------------------- | ----------------------------------------------------------- |
-| CORS error in browser            | Add widget origin to `CHAT_CORS_ORIGINS`                    |
-| `Session not found` after reload | chat-api restarted (in-memory sessions); create new session |
+| Symptom                              | Likely cause                                                            |
+| ------------------------------------ | ----------------------------------------------------------------------- |
+| CORS error in browser                | Add widget origin to `CHAT_CORS_ORIGINS`                                |
+| `Session not found` after reload     | chat-api restarted (in-memory sessions); create new session             |
 | `Connection closed` / `circuit open` | Docker used stdio MCP config from `.env.local`; restart stack after fix |
-| Tool errors / empty reply        | mock-api or MCP servers not running                         |
-| `OPENAI_API_KEY is required`     | Missing key in `.env.local` or compose env                  |
+| Tool errors / empty reply            | mock-api or MCP servers not running                                     |
+| `OPENAI_API_KEY is required`         | Missing key in `.env.local` or compose env                              |

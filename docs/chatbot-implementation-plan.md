@@ -540,23 +540,23 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ### Environment variables (chat stack)
 
-| Variable                                | Used by      | Description                                   |
-| --------------------------------------- | ------------ | --------------------------------------------- |
-| `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` | orchestrator | LLM provider                                  |
-| `LLM_PROVIDER`                          | orchestrator | `openai` \| `anthropic`                       |
-| `LLM_MODEL`                             | orchestrator | e.g. `gpt-4o`, `claude-sonnet-4-20250514`     |
-| `MCP_SERVERS_CONFIG`                    | mcp-client   | Path to JSON server list                      |
-| `MCP_CORE_API_KEY`                      | mcp-client   | HTTP auth to core server                      |
-| `CHAT_CORS_ORIGINS`                     | chat-api     | e.g. `https://www.example.com`                |
-| `CHAT_RATE_LIMIT_RPM`                   | chat-api     | Requests per minute per IP                    |
-| `CHAT_MAX_TOOL_STEPS`                   | orchestrator | Default `10`                                  |
-| `CHAT_TOOL_ALLOWLIST`                   | orchestrator | Comma-separated namespaced tools; empty = all |
-| `CHAT_SYSTEM_PROMPT`                    | orchestrator | Override base persona                         |
-| `CHAT_REDIS_URL`                        | chat-api     | Redis URL for shared sessions; omit for in-memory |
-| `CHAT_SESSION_TTL_SECONDS`              | chat-api     | Session TTL when using Redis (default `86400`) |
+| Variable                                | Used by      | Description                                           |
+| --------------------------------------- | ------------ | ----------------------------------------------------- |
+| `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` | orchestrator | LLM provider                                          |
+| `LLM_PROVIDER`                          | orchestrator | `openai` \| `anthropic`                               |
+| `LLM_MODEL`                             | orchestrator | e.g. `gpt-4o`, `claude-sonnet-4-20250514`             |
+| `MCP_SERVERS_CONFIG`                    | mcp-client   | Path to JSON server list                              |
+| `MCP_CORE_API_KEY`                      | mcp-client   | HTTP auth to core server                              |
+| `CHAT_CORS_ORIGINS`                     | chat-api     | e.g. `https://www.example.com`                        |
+| `CHAT_RATE_LIMIT_RPM`                   | chat-api     | Requests per minute per IP                            |
+| `CHAT_MAX_TOOL_STEPS`                   | orchestrator | Default `10`                                          |
+| `CHAT_TOOL_ALLOWLIST`                   | orchestrator | Comma-separated namespaced tools; empty = all         |
+| `CHAT_SYSTEM_PROMPT`                    | orchestrator | Override base persona                                 |
+| `CHAT_REDIS_URL`                        | chat-api     | Redis URL for shared sessions; omit for in-memory     |
+| `CHAT_SESSION_TTL_SECONDS`              | chat-api     | Session TTL when using Redis (default `86400`)        |
 | `CHAT_ENV`                              | chat-api     | `development` \| `staging` \| `production` MCP config |
-| `OTEL_ENABLED`                          | chat-api     | Enable OTLP trace export                      |
-| `OTEL_EXPORTER_OTLP_ENDPOINT`           | chat-api     | OTLP traces endpoint                          |
+| `OTEL_ENABLED`                          | chat-api     | Enable OTLP trace export                              |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`           | chat-api     | OTLP traces endpoint                                  |
 
 ### Orchestrator defaults (recommended)
 
