@@ -1,0 +1,45 @@
+{
+  "name": "@zuupee/mock-api-server",
+  "version": "0.1.0",
+  "description": "Local mock JSON API for orders — used by the orders MCP plugin in dev and tests",
+  "license": "MIT",
+  "bin": {
+    "mock-api-server": "./bin/mock-api-server.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "data",
+    "README.md"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsup",
+    "start": "node bin/mock-api-server.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/node": "^22.13.10",
+    "eslint": "^9.21.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.0",
+    "vitest": "^3.0.8"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

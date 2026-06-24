@@ -21,4 +21,11 @@ describe("plugin loader", () => {
     const modules = resolveModules(["meta", "example"]);
     expect(modules.map((mod) => mod.id)).toEqual(["meta", "example"]);
   });
+
+  it("resolves the orders plugin module", async () => {
+    const pluginsDir = path.join(process.cwd(), "plugins");
+    await loadPluginsForConfig(pluginsDir, ["meta", "orders"]);
+    const modules = resolveModules(["meta", "orders"]);
+    expect(modules.map((mod) => mod.id)).toEqual(["meta", "orders"]);
+  });
 });

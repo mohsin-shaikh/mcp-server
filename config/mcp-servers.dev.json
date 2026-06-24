@@ -1,0 +1,15 @@
+{
+  "servers": [
+    {
+      "id": "core",
+      "transport": "stdio",
+      "command": "node",
+      "args": ["../mcp-server/dist/index.js"],
+      "env": {
+        "MCP_MODULES": "meta,http,json,datetime,docs",
+        "READ_ONLY": "true",
+        "LOG_LEVEL": "fatal"
+      }
+    }
+  ]
+}

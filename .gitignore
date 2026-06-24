@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+.pnpm-store/
 
 # Build outputs
 dist/
@@ -25,3 +26,4 @@ coverage/
 # Package-specific (mcp-server plugins)
 mcp-server/plugins/*
 !mcp-server/plugins/example/
+!mcp-server/plugins/orders/
