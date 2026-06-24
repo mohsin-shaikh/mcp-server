@@ -15,9 +15,10 @@
     "dev:chat": "pnpm -C chat-api dev",
     "dev:widget": "pnpm -C chat-widget dev",
     "dev:mcp-client": "pnpm -C mcp-client dev",
-    "dev:mock-orders": "pnpm -C mock-api-server dev",
+    "dev:mock-api-server": "pnpm -C mock-api-server dev",
     "dev:orchestrator": "pnpm -C chat-orchestrator dev",
     "docker:chat": "docker compose --env-file .env.local -f docker-compose.chat.yml up --build",
+    "docker:chat:down": "docker compose -f docker-compose.chat.yml down",
     "load-test:chat": "pnpm -C chat-api load-test"
   },
   "devDependencies": {
