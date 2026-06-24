@@ -108,7 +108,7 @@ Embed on any site:
 
 ### Docker Compose demo
 
-Build the widget, set `OPENAI_API_KEY`, then:
+Build the widget, then start the stack (reads `OPENAI_API_KEY` from `.env.local`):
 
 ```bash
 pnpm -C chat-widget build
@@ -116,6 +116,13 @@ pnpm docker:chat
 ```
 
 Open http://localhost:8080 for the widget and http://localhost:3200/health for API status.
+
+### Production hardening
+
+- **Redis sessions:** set `CHAT_REDIS_URL=redis://127.0.0.1:6379` (Docker Compose includes Redis)
+- **OTEL traces:** set `OTEL_ENABLED=true` and point `OTEL_EXPORTER_OTLP_ENDPOINT` at your collector
+- **Per-environment MCP config:** set `CHAT_ENV=staging` or `production` (uses `config/mcp-servers.<env>.json`)
+- **Load test:** `pnpm load-test:chat` (targets p95 &lt; 10s for session create)
 
 See [docs/e2e-manual-checklist.md](./docs/e2e-manual-checklist.md) for the full E2E checklist.
 

@@ -2,6 +2,7 @@ import type { Tool } from "@modelcontextprotocol/client";
 import type { McpConnectionManager } from "./connection-manager.js";
 import { formatCallToolResult } from "./format-result.js";
 import { namespaceTool, parseNamespacedTool } from "./namespace.js";
+import { withSpan } from "./tracing.js";
 import { truncateToolResult } from "./truncate.js";
 import type { McpResourceDefinition, McpToolDefinition, ToolResult } from "./types.js";
 
@@ -116,17 +117,25 @@ export class McpToolRegistry {
     options?: { maxResultBytes?: number },
   ): Promise<ToolResult> {
     const { serverId, toolName } = parseNamespacedTool(namespacedName);
-    const client = this.manager.getClient(serverId);
-    const result = await client.callTool({
-      name: toolName,
-      arguments: asRecord(args),
-    });
+    await this.manager.ensureServer(serverId);
 
-    const formatted = formatCallToolResult(result);
-    return {
-      content: truncateToolResult(formatted.text, options?.maxResultBytes),
-      isError: formatted.isError,
-    };
+    return withSpan(
+      "mcp.callTool",
+      { "mcp.server_id": serverId, "mcp.tool_name": toolName },
+      async () => {
+        const client = this.manager.getClient(serverId);
+        const result = await client.callTool({
+          name: toolName,
+          arguments: asRecord(args),
+        });
+
+        const formatted = formatCallToolResult(result);
+        return {
+          content: truncateToolResult(formatted.text, options?.maxResultBytes),
+          isError: formatted.isError,
+        };
+      },
+    );
   }
 
   async readResource(uri: string, serverId?: string): Promise<string> {

@@ -1,20 +1,11 @@
 import { randomUUID } from "node:crypto";
-import type { ChatMessage } from "@zuupee/chat-orchestrator";
+import type { Session, SessionStore, StoredMessage } from "./types.js";
 
-export type StoredMessage = Extract<ChatMessage, { role: "user" } | { role: "assistant" }>;
-
-export type Session = {
-  id: string;
-  messages: StoredMessage[];
-  createdAt: string;
-  userId?: string;
-};
-
-export class SessionStore {
+export class MemorySessionStore implements SessionStore {
   private readonly sessions = new Map<string, Session>();
   private readonly locks = new Map<string, Promise<void>>();
 
-  create(userId?: string): Session {
+  async create(userId?: string): Promise<Session> {
     const session: Session = {
       id: randomUUID(),
       messages: [],
@@ -25,11 +16,11 @@ export class SessionStore {
     return session;
   }
 
-  get(sessionId: string): Session | undefined {
+  async get(sessionId: string): Promise<Session | undefined> {
     return this.sessions.get(sessionId);
   }
 
-  addMessage(sessionId: string, message: StoredMessage): void {
+  async addMessage(sessionId: string, message: StoredMessage): Promise<void> {
     const session = this.sessions.get(sessionId);
     if (!session) {
       throw new Error(`Session "${sessionId}" not found`);
@@ -54,5 +45,10 @@ export class SessionStore {
         this.locks.delete(sessionId);
       }
     }
+  }
+
+  async close(): Promise<void> {
+    this.sessions.clear();
+    this.locks.clear();
   }
 }

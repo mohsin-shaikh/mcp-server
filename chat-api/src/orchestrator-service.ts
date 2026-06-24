@@ -1,7 +1,11 @@
-import type { ChatMessage, ChatOrchestrator, OrchestratorEvent } from "@zuupee/chat-orchestrator";
+import type { ChatMessage, OrchestratorEvent, OrchestratorRunOptions } from "@zuupee/chat-orchestrator";
+import type { ChatOrchestrator } from "@zuupee/chat-orchestrator";
 
 export type OrchestratorRunner = {
-  run(messages: ChatMessage[]): AsyncIterable<OrchestratorEvent>;
+  run(
+    messages: ChatMessage[],
+    options?: OrchestratorRunOptions,
+  ): AsyncIterable<OrchestratorEvent>;
   close(): Promise<void>;
   getMcpHealth(): Promise<Record<string, "ok" | "error">>;
 };
@@ -14,10 +18,13 @@ export class OrchestratorService implements OrchestratorRunner {
     this.orchestrator = orchestrator;
   }
 
-  async *run(messages: ChatMessage[]): AsyncIterable<OrchestratorEvent> {
+  async *run(
+    messages: ChatMessage[],
+    options?: OrchestratorRunOptions,
+  ): AsyncIterable<OrchestratorEvent> {
     const release = await this.acquire();
     try {
-      for await (const event of this.orchestrator.run(messages)) {
+      for await (const event of this.orchestrator.run(messages, options)) {
         yield event;
       }
     } finally {

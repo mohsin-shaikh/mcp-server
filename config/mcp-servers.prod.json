@@ -1,0 +1,16 @@
+{
+  "servers": [
+    {
+      "id": "core",
+      "transport": "http",
+      "url": "https://mcp-core.internal.example/mcp",
+      "apiKey": "${MCP_CORE_API_KEY}"
+    },
+    {
+      "id": "orders",
+      "transport": "http",
+      "url": "https://mcp-orders.internal.example/mcp",
+      "apiKey": "${MCP_ORDERS_API_KEY}"
+    }
+  ]
+}

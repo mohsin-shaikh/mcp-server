@@ -4,6 +4,7 @@ import {
   StreamableHTTPClientTransport,
   type Transport,
 } from "@modelcontextprotocol/client";
+import { CircuitBreaker } from "./circuit-breaker.js";
 import { healthUrlFromMcpUrl } from "./namespace.js";
 import type { McpHttpServerConfig, McpServerConfig, McpStdioServerConfig } from "./types.js";
 
@@ -56,9 +57,14 @@ async function closeTransport(transport: Transport): Promise<void> {
   await transport.close();
 }
 
+async function closeConnection(connection: ServerConnection): Promise<void> {
+  await connection.client.close();
+  await closeTransport(connection.transport);
+}
+
 export class McpConnectionManager {
   private readonly connections = new Map<string, ServerConnection>();
-  private connected = false;
+  private readonly circuits = new Map<string, CircuitBreaker>();
 
   constructor(private readonly servers: McpServerConfig[]) {
     const ids = new Set<string>();
@@ -67,35 +73,18 @@ export class McpConnectionManager {
         throw new Error(`Duplicate MCP server id "${server.id}"`);
       }
       ids.add(server.id);
+      this.circuits.set(server.id, new CircuitBreaker());
     }
   }
 
   async connect(): Promise<void> {
-    if (this.connected) {
-      return;
-    }
-
-    await Promise.all(
-      this.servers.map(async (config) => {
-        const client = new Client({ name: CLIENT_NAME, version: CLIENT_VERSION });
-        const transport = createTransport(config);
-        await client.connect(transport);
-        this.connections.set(config.id, { config, client, transport });
-      }),
-    );
-
-    this.connected = true;
+    await Promise.all(this.servers.map((config) => this.connectServer(config)));
   }
 
   async close(): Promise<void> {
-    const closing = [...this.connections.values()].map(async ({ client, transport }) => {
-      await client.close();
-      await closeTransport(transport);
-    });
-
+    const closing = [...this.connections.values()].map((connection) => closeConnection(connection));
     await Promise.all(closing);
     this.connections.clear();
-    this.connected = false;
   }
 
   getClient(serverId: string): Client {
@@ -110,32 +99,124 @@ export class McpConnectionManager {
     return [...this.connections.keys()];
   }
 
+  getCircuitState(serverId: string): "closed" | "open" | "half-open" | undefined {
+    return this.circuits.get(serverId)?.getState();
+  }
+
+  async ensureServer(serverId: string): Promise<void> {
+    const circuit = this.circuits.get(serverId);
+    if (!circuit) {
+      throw new Error(`Unknown MCP server "${serverId}"`);
+    }
+
+    if (!circuit.canAttempt()) {
+      throw new Error(`MCP server "${serverId}" is temporarily unavailable (circuit open)`);
+    }
+
+    if (!this.connections.has(serverId)) {
+      const config = this.servers.find((server) => server.id === serverId);
+      if (!config) {
+        throw new Error(`Unknown MCP server "${serverId}"`);
+      }
+      await this.connectServer(config);
+      return;
+    }
+
+    try {
+      await this.pingServer(serverId);
+      circuit.recordSuccess();
+    } catch {
+      circuit.recordFailure();
+      await this.reconnectServer(serverId);
+    }
+  }
+
+  async reconnectServer(serverId: string): Promise<void> {
+    const existing = this.connections.get(serverId);
+    if (existing) {
+      await closeConnection(existing);
+      this.connections.delete(serverId);
+    }
+
+    const config = this.servers.find((server) => server.id === serverId);
+    if (!config) {
+      throw new Error(`Unknown MCP server "${serverId}"`);
+    }
+
+    await this.connectServer(config);
+  }
+
   async healthCheck(): Promise<Record<string, "ok" | "error">> {
     const results: Record<string, "ok" | "error"> = {};
 
     await Promise.all(
-      [...this.connections.entries()].map(async ([serverId, { config, client }]) => {
+      this.servers.map(async (config) => {
+        const circuit = this.circuits.get(config.id);
+        if (!circuit?.canAttempt()) {
+          results[config.id] = "error";
+          return;
+        }
+
         try {
-          if (isHttpConfig(config)) {
-            const healthUrl = healthUrlFromMcpUrl(config.url);
-            const headers: Record<string, string> = {};
-            if (config.apiKey) {
-              headers["X-API-Key"] = config.apiKey;
-            }
-
-            const response = await fetch(healthUrl, { headers });
-            results[serverId] = response.ok ? "ok" : "error";
-            return;
+          if (!this.connections.has(config.id)) {
+            await this.connectServer(config);
+          } else {
+            await this.pingServer(config.id);
           }
-
-          await client.ping();
-          results[serverId] = "ok";
+          circuit.recordSuccess();
+          results[config.id] = "ok";
         } catch {
-          results[serverId] = "error";
+          circuit?.recordFailure();
+          results[config.id] = "error";
         }
       }),
     );
 
     return results;
+  }
+
+  private async connectServer(config: McpServerConfig): Promise<void> {
+    const circuit = this.circuits.get(config.id);
+    if (!circuit?.canAttempt()) {
+      throw new Error(`MCP server "${config.id}" is temporarily unavailable (circuit open)`);
+    }
+
+    if (this.connections.has(config.id)) {
+      return;
+    }
+
+    try {
+      const client = new Client({ name: CLIENT_NAME, version: CLIENT_VERSION });
+      const transport = createTransport(config);
+      await client.connect(transport);
+      this.connections.set(config.id, { config, client, transport });
+      circuit.recordSuccess();
+    } catch (err) {
+      circuit.recordFailure();
+      throw err;
+    }
+  }
+
+  private async pingServer(serverId: string): Promise<void> {
+    const connection = this.connections.get(serverId);
+    if (!connection) {
+      throw new Error(`MCP server "${serverId}" is not connected`);
+    }
+
+    if (isHttpConfig(connection.config)) {
+      const healthUrl = healthUrlFromMcpUrl(connection.config.url);
+      const headers: Record<string, string> = {};
+      if (connection.config.apiKey) {
+        headers["X-API-Key"] = connection.config.apiKey;
+      }
+
+      const response = await fetch(healthUrl, { headers });
+      if (!response.ok) {
+        throw new Error(`Health check failed for "${serverId}"`);
+      }
+      return;
+    }
+
+    await connection.client.ping();
   }
 }

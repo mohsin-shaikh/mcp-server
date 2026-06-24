@@ -1,12 +1,28 @@
 name: zuupee-chat
 
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   mock-api:
     build:
       context: .
       dockerfile: docker/Dockerfile.mock-api
     ports:
       - "3999:3999"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3999/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
 
   mcp-core:
     build:
@@ -15,8 +31,15 @@ services:
     environment:
       MCP_MODULES: meta,json,datetime
       READ_ONLY: "true"
+      MCP_HTTP_ALLOWED_HOSTS: localhost,127.0.0.1,mcp-core,chat-api
     expose:
       - "3100"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3100/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
 
   mcp-orders:
     build:
@@ -27,24 +50,36 @@ services:
       READ_ONLY: "false"
       ORDERS_API_BASE_URL: http://mock-api:3999
       ORDERS_API_ALLOWED_HOSTS: mock-api,127.0.0.1,localhost
+      MCP_HTTP_ALLOWED_HOSTS: localhost,127.0.0.1,mcp-orders,chat-api
     depends_on:
       mock-api:
         condition: service_healthy
     expose:
       - "3100"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3100/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
 
   chat-api:
     build:
       context: .
       dockerfile: docker/Dockerfile.chat-api
+    env_file:
+      - path: .env.local
+        required: false
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
-      LLM_MODEL: ${LLM_MODEL:-gpt-4o}
-      CHAT_CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080
+      # Override .env.local — local dev uses stdio MCP; Docker uses HTTP services.
+      MCP_SERVERS_CONFIG: /app/config/mcp-servers.docker.json
+      CHAT_CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173
+      CHAT_REDIS_URL: redis://redis:6379
     ports:
       - "3200:3200"
     depends_on:
+      redis:
+        condition: service_healthy
       mock-api:
         condition: service_healthy
       mcp-core:

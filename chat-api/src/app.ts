@@ -7,13 +7,13 @@ import type { Logger } from "./logger.js";
 import { createAuthMiddleware } from "./middleware/auth.js";
 import { createRateLimiter } from "./middleware/rate-limit.js";
 import type { OrchestratorRunner } from "./orchestrator-service.js";
-import { SessionStore } from "./sessions.js";
+import type { SessionStore } from "./session-store/index.js";
 
 export type CreateAppDeps = {
   orchestrator: OrchestratorRunner;
   logger: Logger;
   config: ChatApiConfig;
-  sessionStore?: SessionStore;
+  sessionStore: SessionStore;
 };
 
 function orchestratorEventData(event: OrchestratorEvent): Record<string, unknown> {
@@ -32,8 +32,7 @@ function orchestratorEventData(event: OrchestratorEvent): Record<string, unknown
 }
 
 export function createApp(deps: CreateAppDeps): Hono {
-  const { orchestrator, logger, config } = deps;
-  const sessions = deps.sessionStore ?? new SessionStore();
+  const { orchestrator, logger, config, sessionStore: sessions } = deps;
   const rateLimiter = createRateLimiter(config.rateLimitRpm);
   const auth = createAuthMiddleware(config.apiKey);
 
@@ -54,10 +53,15 @@ export function createApp(deps: CreateAppDeps): Hono {
   app.get("/health", async (c) => {
     try {
       const mcp = await orchestrator.getMcpHealth();
-      return c.json({
-        status: "ok",
-        mcp,
-      });
+      const allOk = Object.values(mcp).every((status) => status === "ok");
+      return c.json(
+        {
+          status: allOk ? "ok" : "degraded",
+          mcp,
+          sessionStore: config.redisUrl ? "redis" : "memory",
+        },
+        allOk ? 200 : 503,
+      );
     } catch (err) {
       logger.error({ err }, "health check failed");
       return c.json(
@@ -76,13 +80,13 @@ export function createApp(deps: CreateAppDeps): Hono {
 
   app.post("/chat/sessions", async (c) => {
     const body: { userId?: string } = await c.req.json().catch(() => ({}));
-    const session = sessions.create(body.userId);
+    const session = await sessions.create(body.userId);
     logger.info({ sessionId: session.id }, "session created");
     return c.json({ sessionId: session.id });
   });
 
-  app.get("/chat/sessions/:id/messages", (c) => {
-    const session = sessions.get(c.req.param("id"));
+  app.get("/chat/sessions/:id/messages", async (c) => {
+    const session = await sessions.get(c.req.param("id"));
     if (!session) {
       return c.json({ error: "Session not found" }, 404);
     }
@@ -92,7 +96,7 @@ export function createApp(deps: CreateAppDeps): Hono {
 
   app.post("/chat/sessions/:id/messages", async (c) => {
     const sessionId = c.req.param("id");
-    const session = sessions.get(sessionId);
+    const session = await sessions.get(sessionId);
     if (!session) {
       return c.json({ error: "Session not found" }, 404);
     }
@@ -105,20 +109,21 @@ export function createApp(deps: CreateAppDeps): Hono {
 
     return streamSSE(c, async (stream) => {
       await sessions.withSessionLock(sessionId, async () => {
-        sessions.addMessage(sessionId, { role: "user", content });
-        const history = [...session.messages];
+        await sessions.addMessage(sessionId, { role: "user", content });
+        const latest = await sessions.get(sessionId);
+        const history = latest ? [...latest.messages] : [];
 
         logger.info({ sessionId }, "message started");
 
         try {
-          for await (const event of orchestrator.run(history)) {
+          for await (const event of orchestrator.run(history, { sessionId })) {
             await stream.writeSSE({
               event: event.type,
               data: JSON.stringify(orchestratorEventData(event)),
             });
 
             if (event.type === "done") {
-              sessions.addMessage(sessionId, { role: "assistant", content: event.message });
+              await sessions.addMessage(sessionId, { role: "assistant", content: event.message });
             }
           }
         } catch (err) {

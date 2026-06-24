@@ -1,0 +1,16 @@
+# Keep Docker build contexts small
+node_modules
+**/node_modules
+**/dist
+.git
+.env.local
+*.md
+!mock-api-server/README.md
+chat-widget
+docs
+docker/observability
+mcp-server/docker
+**/.cursor
+**/coverage
+**/*.test.ts
+**/tests

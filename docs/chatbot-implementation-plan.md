@@ -527,12 +527,12 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 
 ### Phase 6 — Production hardening (ongoing)
 
-- [ ] Redis session store
-- [ ] OTEL traces: chat-api → orchestrator → mcp-client → mcp-server
-- [ ] MCP client reconnect + health-based circuit breaker
-- [ ] Tool audit log (sessionId, tool name, args hash, latency)
-- [ ] Per-environment config (staging/prod MCP URLs)
-- [ ] Load test: target p95 &lt; 10s for single-tool queries
+- [x] Redis session store
+- [x] OTEL traces: chat-api → orchestrator → mcp-client → mcp-server
+- [x] MCP client reconnect + health-based circuit breaker
+- [x] Tool audit log (sessionId, tool name, args hash, latency)
+- [x] Per-environment config (staging/prod MCP URLs)
+- [x] Load test: target p95 &lt; 10s for single-tool queries
 
 ---
 
@@ -552,6 +552,11 @@ See [mcp-server DEPLOY.md](../mcp-server/docs/DEPLOY.md) for HTTP auth and Docke
 | `CHAT_MAX_TOOL_STEPS`                   | orchestrator | Default `10`                                  |
 | `CHAT_TOOL_ALLOWLIST`                   | orchestrator | Comma-separated namespaced tools; empty = all |
 | `CHAT_SYSTEM_PROMPT`                    | orchestrator | Override base persona                         |
+| `CHAT_REDIS_URL`                        | chat-api     | Redis URL for shared sessions; omit for in-memory |
+| `CHAT_SESSION_TTL_SECONDS`              | chat-api     | Session TTL when using Redis (default `86400`) |
+| `CHAT_ENV`                              | chat-api     | `development` \| `staging` \| `production` MCP config |
+| `OTEL_ENABLED`                          | chat-api     | Enable OTLP trace export                      |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`           | chat-api     | OTLP traces endpoint                          |
 
 ### Orchestrator defaults (recommended)
 
