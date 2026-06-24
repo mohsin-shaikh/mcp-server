@@ -9,7 +9,7 @@ Monorepo for Zuupee's [Model Context Protocol (MCP)](https://modelcontextprotoco
 | [`mcp-server`](./mcp-server/)               | Available   | General-purpose MCP server with pluggable modules, stdio and HTTP transports |
 | [`mcp-client`](./mcp-client/)               | In progress | Multi-server MCP client with namespaced tools                                |
 | [`chat-orchestrator`](./chat-orchestrator/) | Available   | Custom ReAct agent loop with OpenAI + MCP tools                              |
-| [`chat-api`](./chat-api/)                   | Scaffold    | HTTP API + SSE for the website chatbot (Phase 4)                             |
+| [`chat-api`](./chat-api/)                   | Available   | HTTP API + SSE for the website chatbot                                       |
 | [`mock-api-server`](./mock-api-server/)     | Available   | Local JSON orders API for dev and tests                                      |
 
 Domain plugins live under [`mcp-server/plugins/`](./mcp-server/plugins/) — see the `orders` plugin for a reference integration.
@@ -57,10 +57,25 @@ MCP_SERVERS_CONFIG=./config/mcp-servers.chat.example.json \
 pnpm dev:orchestrator -- "What is the status of order ord_123?"
 ```
 
-### Chat API (scaffold)
+### Chat API
+
+Set `OPENAI_API_KEY` in `.env.local`, then:
 
 ```bash
+# Terminal 1
+pnpm dev:mock-orders
+
+# Terminal 2
 pnpm dev:chat
+```
+
+Create a session and stream a reply:
+
+```bash
+SESSION=$(curl -s -X POST http://127.0.0.1:3200/chat/sessions | jq -r .sessionId)
+curl -N -X POST "http://127.0.0.1:3200/chat/sessions/$SESSION/messages" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"What is the status of order ord_123?"}'
 ```
 
 Copy `.env.example` to `.env.local` at the repo root and set `OPENAI_API_KEY` for orchestrator demos.

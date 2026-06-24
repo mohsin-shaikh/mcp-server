@@ -10,4 +10,5 @@ export interface ToolRegistryLike {
 export interface ConnectionManagerLike {
   connect(): Promise<void>;
   close(): Promise<void>;
+  healthCheck(): Promise<Record<string, "ok" | "error">>;
 }

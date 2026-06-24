@@ -138,6 +138,11 @@ export class ChatOrchestrator {
     }
   }
 
+  async getMcpHealth(): Promise<Record<string, "ok" | "error">> {
+    await this.manager.connect();
+    return this.manager.healthCheck();
+  }
+
   private async collectCompletion(
     messages: LlmMessage[],
     tools: unknown[],

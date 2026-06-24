@@ -29,6 +29,7 @@ function createMockManager(): ConnectionManagerLike {
   return {
     connect: vi.fn(async () => undefined),
     close: vi.fn(async () => undefined),
+    healthCheck: vi.fn(async () => ({ orders: "ok" })),
   };
 }
 
