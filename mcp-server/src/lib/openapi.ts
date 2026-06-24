@@ -135,7 +135,7 @@ export function buildOperationRequest(
   }
 
   const headers: Record<string, string> = { ...options.headers };
-  let body = options.body;
+  const body = options.body;
 
   if (body && !headers["Content-Type"] && !headers["content-type"]) {
     headers["Content-Type"] = "application/json";
