@@ -1,6 +1,18 @@
 {
   "servers": [
     {
+      "id": "core",
+      "transport": "stdio",
+      "command": "pnpm",
+      "args": ["--dir", "mcp-server", "exec", "tsx", "src/index.ts"],
+      "env": {
+        "MCP_MODULES": "meta,json,datetime",
+        "MCP_PLUGINS_DIR": "./plugins",
+        "READ_ONLY": "true",
+        "LOG_LEVEL": "fatal"
+      }
+    },
+    {
       "id": "orders",
       "transport": "stdio",
       "command": "pnpm",

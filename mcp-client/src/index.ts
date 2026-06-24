@@ -12,6 +12,7 @@ export async function loadMcpServersConfig(path: string): Promise<McpServerConfi
   return parsed.servers;
 }
 
+export { resolveMcpServersConfig } from "./resolve-config.js";
 export { toOpenAITools } from "./adapters/openai.js";
 export { McpConnectionManager } from "./connection-manager.js";
 export { formatCallToolResult } from "./format-result.js";
