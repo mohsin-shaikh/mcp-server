@@ -1,10 +1,15 @@
 {
-  "name": "@zuupee/mcp-client",
+  "name": "@zuupee/mock-api-server",
   "version": "0.1.0",
-  "description": "MCP client SDK for connecting to one or more MCP servers",
+  "description": "Local mock JSON API for orders — used by the orders MCP plugin in dev and tests",
   "license": "MIT",
+  "bin": {
+    "mock-api-server": "./bin/mock-api-server.js"
+  },
   "files": [
+    "bin",
     "dist",
+    "data",
     "README.md"
   ],
   "type": "module",
@@ -17,22 +22,16 @@
     }
   },
   "scripts": {
-    "dev": "tsx scripts/smoke.ts",
+    "dev": "tsx src/cli.ts",
     "build": "tsup",
-    "pretest": "pnpm -C ../mcp-server build && pnpm -C ../mock-api-server build",
+    "start": "node bin/mock-api-server.js",
     "test": "vitest run",
-    "test:integration": "vitest run tests/*.integration.test.ts",
-    "test:watch": "vitest",
-    "lint": "eslint src/",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/client": "2.0.0-alpha.2"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@types/node": "^22.13.10",
-    "@zuupee/mock-api-server": "workspace:*",
     "eslint": "^9.21.0",
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",

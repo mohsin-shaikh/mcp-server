@@ -13,7 +13,8 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "dev:chat": "pnpm -C chat-api dev",
-    "dev:mcp-client": "pnpm -C mcp-client dev"
+    "dev:mcp-client": "pnpm -C mcp-client dev",
+    "dev:mock-orders": "pnpm -C mock-api-server dev"
   },
   "devDependencies": {
     "oxfmt": "0.55.0"

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { McpConnectionManager, McpToolRegistry, namespaceTool } from "../src/index.js";
-import { startMockOrdersApi } from "../../mcp-server/tests/helpers/mock-orders-api.js";
+import { startMockOrdersApi } from "@zuupee/mock-api-server";
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const mcpServerDir = resolve(repoRoot, "mcp-server");
