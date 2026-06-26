@@ -1,0 +1,515 @@
+# Chat Conversation Storage — Implementation Plan
+
+> Plan for **durable storage** of chat sessions and messages in the Zuupee chatbot stack.
+
+Related docs:
+
+- [Website Chatbot — Implementation Plan](./chatbot-implementation-plan.md)
+- [MCP Client & Agent Orchestrator — Planning Guide](./mcp-client-and-orchestrator.md)
+
+---
+
+## 1. Current state
+
+Today, `chat-api` persists sessions through a `SessionStore` abstraction with two backends:
+
+| Backend       | Config                 | Behavior                                                        |
+| ------------- | ---------------------- | --------------------------------------------------------------- |
+| **In-memory** | `CHAT_REDIS_URL` unset | Process-local `Map`; lost on restart                            |
+| **Redis**     | `CHAT_REDIS_URL` set   | Whole session stored as JSON under `chat:session:{id}` with TTL |
+
+Each session holds:
+
+- `id`
+- `messages[]` (user + assistant only)
+- `createdAt`
+- optional `userId`
+
+Messages are written in `POST /chat/sessions/:id/messages` when the user sends a message and when the orchestrator emits `done`.
+
+**There is no relational database** for chat history. Redis TTL defaults to 24 hours (`CHAT_SESSION_TTL_SECONDS=86400`). Tool audit data is logged (pino) but not stored in a queryable store.
+
+### What is not persisted today
+
+- Intermediate `tool` role messages (orchestrator reconstructs context each turn)
+- Full tool arguments/results (only `argsHash` in audit logs)
+- User conversation lists (no `GET /chat/sessions` by `userId`)
+- Long-term history beyond Redis TTL
+
+---
+
+## 2. Goals
+
+### Primary goal
+
+Add **durable, queryable storage** for conversations and messages so that:
+
+- History survives API restarts and horizontal scaling
+- Sessions are retained according to a configurable retention policy (not Redis TTL)
+- Logged-in users can resume past conversations (v2)
+- Tool invocations can be audited beyond logs (v2+)
+
+### Architecture decision (locked)
+
+| Decision    | Choice                                                           |
+| ----------- | ---------------------------------------------------------------- |
+| **Storage** | **PostgreSQL only** — no Redis for session data, locks, or cache |
+| **ORM**     | **Drizzle** (`drizzle-orm` + `drizzle-kit` + `pg`)               |
+
+Redis may remain in the stack for unrelated concerns (e.g. rate limiting) but is **out of scope** for conversation persistence.
+
+### Non-goals (initial DB release)
+
+- Full LLM thread replay including every `tool` message
+- Conversation search / embeddings / RAG over chat history
+- Multi-region replication
+- Real-time sync across devices (beyond reload via API)
+- Redis-backed session store or cache layer
+
+### Success criteria
+
+| Criterion         | Target                                                      |
+| ----------------- | ----------------------------------------------------------- |
+| Durability        | History survives `chat-api` restart                         |
+| API compatibility | Existing widget endpoints unchanged                         |
+| Concurrency       | Concurrent messages on one session do not corrupt history   |
+| Ownership         | Sessions scoped to authenticated `userId` before production |
+| Migrations        | Drizzle-managed schema; deployable via Docker Compose       |
+
+---
+
+## 3. Architecture
+
+PostgreSQL is the **sole** persistence layer for sessions and messages.
+
+```mermaid
+flowchart LR
+  Widget[chat-widget]
+  API[chat-api]
+  Drizzle[Drizzle ORM]
+  DB[(PostgreSQL)]
+
+  Widget --> API
+  API --> Drizzle
+  Drizzle --> DB
+```
+
+| Layer                   | Role                                                             |
+| ----------------------- | ---------------------------------------------------------------- |
+| **PostgreSQL**          | Source of truth for conversations, messages, and tool audit rows |
+| **Drizzle**             | Schema definitions, typed queries, migrations (`drizzle-kit`)    |
+| **Memory** (tests only) | Existing `MemorySessionStore` for unit tests without a DB        |
+
+### Concurrency
+
+`withSessionLock` uses **Postgres advisory locks** inside a transaction:
+
+```sql
+SELECT pg_advisory_xact_lock(hashtext($conversationId));
+```
+
+This serializes concurrent `POST .../messages` on the same session across multiple `chat-api` instances — no Redis required.
+
+### Extension point
+
+The `SessionStore` interface in `chat-api/src/session-store/types.ts` is the seam. Add `PostgresSessionStore` (backed by Drizzle) without changing the widget or orchestrator.
+
+---
+
+## 4. Schema (PostgreSQL + Drizzle)
+
+### Drizzle layout
+
+```
+chat-api/
+  src/
+    db/
+      schema.ts          # Drizzle table definitions
+      index.ts           # drizzle(pool) client export
+      migrate.ts         # run migrations on startup (optional)
+  drizzle/
+    0000_initial.sql     # generated by drizzle-kit
+  drizzle.config.ts
+```
+
+### Phase 1 — minimal (matches current API)
+
+**Drizzle schema (`schema.ts`):**
+
+```ts
+import { sql } from "drizzle-orm";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  integer,
+  jsonb,
+  boolean,
+  index,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    metadata: jsonb("metadata").notNull().default({}),
+  },
+  (t) => [
+    index("conversations_user_id_updated_at_idx")
+      .on(t.userId, t.updatedAt)
+      .where(sql`user_id IS NOT NULL`),
+  ],
+);
+
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["user", "assistant"] }).notNull(),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    sequence: integer("sequence").notNull(),
+  },
+  (t) => [
+    uniqueIndex("messages_conversation_sequence_idx").on(t.conversationId, t.sequence),
+    index("messages_conversation_created_at_idx").on(t.conversationId, t.createdAt),
+  ],
+);
+```
+
+**Equivalent SQL (for reference):**
+
+```sql
+CREATE TABLE conversations (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       TEXT NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  metadata      JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX conversations_user_id_updated_at_idx
+  ON conversations (user_id, updated_at DESC)
+  WHERE user_id IS NOT NULL;
+
+CREATE TABLE messages (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id  UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  role             TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+  content          TEXT NOT NULL,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  sequence         INT NOT NULL
+);
+
+CREATE UNIQUE INDEX messages_conversation_sequence_idx
+  ON messages (conversation_id, sequence);
+
+CREATE INDEX messages_conversation_created_at_idx
+  ON messages (conversation_id, created_at);
+```
+
+`sequence` is a monotonic per-conversation index for stable ordering (prefer over `created_at` alone under concurrency).
+
+### Phase 2 — extensions (optional)
+
+Add to `schema.ts` and generate a new migration:
+
+```ts
+export const toolInvocations = pgTable("tool_invocations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  conversationId: uuid("conversation_id")
+    .notNull()
+    .references(() => conversations.id, { onDelete: "cascade" }),
+  messageId: uuid("message_id").references(() => messages.id),
+  toolName: text("tool_name").notNull(),
+  argsHash: text("args_hash").notNull(),
+  argsJson: jsonb("args_json"),
+  resultSummary: text("result_summary"),
+  latencyMs: integer("latency_ms").notNull(),
+  isError: boolean("is_error").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+```
+
+Store `argsJson` only when `CHAT_STORE_TOOL_ARGS=true` and after redacting secrets.
+
+---
+
+## 5. Code changes
+
+### 5.1 Dependencies
+
+Add to `chat-api/package.json`:
+
+| Package       | Purpose                                |
+| ------------- | -------------------------------------- |
+| `drizzle-orm` | Typed query builder and schema         |
+| `drizzle-kit` | Migration generation (`devDependency`) |
+| `pg`          | PostgreSQL driver                      |
+| `@types/pg`   | Types (`devDependency`)                |
+
+### 5.2 `PostgresSessionStore` (Drizzle-backed)
+
+Implement the existing `SessionStore` interface:
+
+| Method                           | Behavior                                                                               |
+| -------------------------------- | -------------------------------------------------------------------------------------- |
+| `create(userId?)`                | `db.insert(conversations).values(...).returning()`                                     |
+| `get(sessionId)`                 | Load conversation + messages `orderBy(sequence)`                                       |
+| `addMessage(sessionId, message)` | Transaction: advisory lock → verify conversation → insert message → update `updatedAt` |
+| `withSessionLock(sessionId, fn)` | `db.transaction` with `pg_advisory_xact_lock(hashtext(sessionId))`                     |
+| `close()`                        | `pool.end()`                                                                           |
+
+Example lock inside a transaction:
+
+```ts
+await db.transaction(async (tx) => {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${sessionId}))`);
+  return fn(tx);
+});
+```
+
+### 5.3 Store selection (`createSessionStore`)
+
+```
+CHAT_DATABASE_URL set  →  PostgresSessionStore (production)
+unset (tests/dev)      →  MemorySessionStore (existing)
+```
+
+Remove Redis from the session store factory once Postgres is live. `RedisSessionStore` can be deleted or kept temporarily behind a deprecation flag.
+
+### 5.4 Drizzle migrations
+
+**`drizzle.config.ts`:**
+
+```ts
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  schema: "./src/db/schema.ts",
+  out: "./drizzle",
+  dialect: "postgresql",
+  dbCredentials: { url: process.env.CHAT_DATABASE_URL! },
+});
+```
+
+**Scripts (add to `chat-api/package.json`):**
+
+```json
+{
+  "db:generate": "drizzle-kit generate",
+  "db:migrate": "drizzle-kit migrate",
+  "db:studio": "drizzle-kit studio"
+}
+```
+
+Run `pnpm db:generate` after schema changes; commit generated SQL under `chat-api/drizzle/`.
+
+### 5.5 API surface
+
+**Phase 1 — no breaking changes**
+
+| Method | Path                          | Notes           |
+| ------ | ----------------------------- | --------------- |
+| `POST` | `/chat/sessions`              | Unchanged       |
+| `GET`  | `/chat/sessions/:id/messages` | Unchanged       |
+| `POST` | `/chat/sessions/:id/messages` | Unchanged (SSE) |
+
+**Phase 2 — new endpoints**
+
+| Method   | Path                 | Notes                                         |
+| -------- | -------------------- | --------------------------------------------- |
+| `GET`    | `/chat/sessions`     | List conversations for authenticated `userId` |
+| `DELETE` | `/chat/sessions/:id` | GDPR / user-initiated delete                  |
+| `PATCH`  | `/chat/sessions/:id` | Optional title/summary                        |
+
+### 5.6 Auth and ownership
+
+Before storing real user data in production:
+
+1. Derive `userId` from JWT on `POST /chat/sessions` (do not trust client body alone).
+2. On `GET` / `POST` for `:id`, verify `session.userId === auth.userId` (or allow anonymous-only sessions).
+3. Domain MCP plugins must continue validating ownership server-side on every tool call.
+
+### 5.7 Tool audit → DB (Phase 2)
+
+Wire `onToolAudit` in `chat-api` to a Drizzle-backed `ToolAuditRepository` in addition to structured logs:
+
+```ts
+onToolAudit: (entry) => {
+  logger.info({ audit: "tool_call", ...entry });
+  toolAuditRepo.insert(entry); // async, non-blocking
+},
+```
+
+---
+
+## 6. Phased rollout
+
+### Phase 1 — Durable storage (1–2 weeks)
+
+- [ ] Add Postgres service to `docker-compose.chat.yml`
+- [ ] Add `CHAT_DATABASE_URL` to `chat-api` config
+- [ ] Add Drizzle schema, config, and initial migration
+- [ ] `PostgresSessionStore` implementing `SessionStore` via Drizzle
+- [ ] Advisory locks for `withSessionLock`
+- [ ] Unit tests with test DB / testcontainers
+- [ ] Integration test: create session → send message → reload history after restart
+- [ ] Health endpoint reports `sessionStore: "postgres"`
+- [ ] Remove Redis session store from production path
+
+**Exit:** Chat history survives API restart with no Redis dependency for sessions.
+
+### Phase 2 — User-scoped conversations (1 week)
+
+- [ ] JWT middleware → `userId` on session create
+- [ ] `GET /chat/sessions` for logged-in users
+- [ ] Widget: optional “resume last conversation” (not only `sessionStorage` session id)
+- [ ] Retention job: delete conversations older than N days
+
+### Phase 3 — Observability and compliance (ongoing)
+
+- [ ] `tool_invocations` table (Drizzle migration)
+- [ ] Admin/debug read API for conversation + tool trail
+- [ ] PII redaction before persist (tokens, emails in tool args)
+- [ ] Export / delete user data endpoints
+
+### Phase 4 — Advanced memory (later)
+
+- [ ] Store full `ChatMessage[]` including `tool` role for exact LLM replay
+- [ ] Conversation summarization when history exceeds token budget
+- [ ] `conversation_checkpoints` for long-running agent workflows
+
+---
+
+## 7. Configuration
+
+### Environment variables
+
+| Variable                           | Used by  | Description                                                                |
+| ---------------------------------- | -------- | -------------------------------------------------------------------------- |
+| `CHAT_DATABASE_URL`                | chat-api | **Required in production.** `postgresql://user:pass@host:5432/zuupee_chat` |
+| `CHAT_DB_POOL_MAX`                 | chat-api | Connection pool size (default `10`)                                        |
+| `CHAT_CONVERSATION_RETENTION_DAYS` | chat-api | Optional cleanup job (Phase 2)                                             |
+| `CHAT_STORE_TOOL_ARGS`             | chat-api | `false` by default; persist redacted tool args when `true`                 |
+
+### Deprecated for session storage
+
+| Variable                   | Notes                                                      |
+| -------------------------- | ---------------------------------------------------------- |
+| `CHAT_REDIS_URL`           | No longer used for sessions once Postgres is live          |
+| `CHAT_SESSION_TTL_SECONDS` | Replaced by `CHAT_CONVERSATION_RETENTION_DAYS` cleanup job |
+
+### Docker Compose sketch
+
+```yaml
+postgres:
+  image: postgres:16-alpine
+  environment:
+    POSTGRES_DB: zuupee_chat
+    POSTGRES_USER: zuupee
+    POSTGRES_PASSWORD: zuupee
+  volumes:
+    - chat_pg_data:/var/lib/postgresql/data
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U zuupee -d zuupee_chat"]
+    interval: 5s
+    timeout: 3s
+    retries: 5
+
+chat-api:
+  environment:
+    CHAT_DATABASE_URL: postgresql://zuupee:zuupee@postgres:5432/zuupee_chat
+  depends_on:
+    postgres:
+      condition: service_healthy
+```
+
+### Migration strategy
+
+- Generate migrations with `drizzle-kit generate`; commit SQL to `chat-api/drizzle/`.
+- Run migrations on `chat-api` startup (`drizzle-kit migrate`) or as a separate init job (production).
+- **No backfill from Redis required** — existing Redis sessions expire naturally; new sessions use Postgres.
+
+---
+
+## 8. Security and retention
+
+| Risk                            | Mitigation                                                      |
+| ------------------------------- | --------------------------------------------------------------- |
+| Session hijack via guessed UUID | Auth ownership checks; rate limit session create                |
+| PII in message content          | Retention policy; encrypt at rest if required by policy         |
+| Secrets in tool args            | Redact before `args_json`; default `CHAT_STORE_TOOL_ARGS=false` |
+| Unauthorized listing            | `GET /chat/sessions` requires JWT; filter by `user_id`          |
+| GDPR                            | `DELETE` conversation cascades messages and tool rows           |
+
+### Retention defaults (recommend)
+
+| Session type  | Suggested retention         |
+| ------------- | --------------------------- |
+| Anonymous     | 7 days                      |
+| Authenticated | 90 days (configurable)      |
+| Tool audit    | Same as parent conversation |
+
+Enforce via a scheduled cleanup job querying `conversations.updated_at` — not key TTL.
+
+---
+
+## 9. Testing checklist
+
+| Test                          | Verify                                                         |
+| ----------------------------- | -------------------------------------------------------------- |
+| Create + add messages         | `sequence` ordering; transactional inserts                     |
+| Concurrent POSTs same session | Advisory lock prevents interleaved corrupt history             |
+| Restart `chat-api`            | `GET /messages` returns prior history                          |
+| Unknown session               | `404` unchanged                                                |
+| Widget `ensureSession`        | Works with stored `sessionId`                                  |
+| Load test                     | Drizzle connection pool does not exhaust under SSE concurrency |
+| Migration rollback            | Documented manual rollback for failed deploy                   |
+| Multi-instance                | Two `chat-api` replicas serialize locks on same session        |
+
+---
+
+## 10. Open decisions
+
+| #   | Decision             | Options                                  | Recommendation                                            |
+| --- | -------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| 1   | Tool message storage | User/assistant only vs full thread       | User/assistant for v1; full thread for debug/replay later |
+| 2   | Anonymous retention  | 24h / 7d / none                          | 7 days with cleanup job                                   |
+| 3   | Database placement   | Shared app DB vs dedicated `zuupee_chat` | Dedicated DB for migrations and retention                 |
+| 4   | Migration runner     | Startup vs init job                      | Init job in production; startup OK for dev                |
+
+---
+
+## 11. Suggested implementation order
+
+1. **Drizzle schema + migrations** — `conversations` + `messages` tables.
+2. **`PostgresSessionStore`** — same message shape as today (user/assistant only).
+3. **Advisory locks** — `withSessionLock` via `pg_advisory_xact_lock`.
+4. **JWT `userId` + ownership checks** — before production user data.
+5. **`GET /chat/sessions`** — once auth exists.
+6. **`tool_invocations` table** — when analytics beyond logs is needed.
+7. **Remove `RedisSessionStore`** from production factory.
+
+---
+
+## 12. References (code)
+
+| File                                   | Relevance                                   |
+| -------------------------------------- | ------------------------------------------- |
+| `chat-api/src/session-store/types.ts`  | `SessionStore` interface                    |
+| `chat-api/src/session-store/memory.ts` | In-memory reference (tests)                 |
+| `chat-api/src/session-store/redis.ts`  | To be removed / deprecated                  |
+| `chat-api/src/session-store/index.ts`  | Store factory                               |
+| `chat-api/src/app.ts`                  | Session CRUD and message persistence        |
+| `chat-api/src/config.ts`               | Env config                                  |
+| `chat-orchestrator/src/types.ts`       | `ChatMessage` roles (user, assistant, tool) |
+| `chat-widget/src/api.ts`               | Client history load / sessionStorage        |
